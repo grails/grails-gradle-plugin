@@ -18,8 +18,8 @@ repositories {
     maven { url "https://repo.grails.org/grails/core" }
 }
 
-ext.isBuildSnapshot = grailsVersion.endsWith("-SNAPSHOT")
-ext.isReleaseVersion = !ext.isBuildSnapshot
+ext.isSnapshot = version.endsWith("-SNAPSHOT")
+ext.isReleaseVersion = !ext.isSnapshot
 ext."signing.keyId" = System.getenv("SIGNING_KEY") ?: project.hasProperty("signing.keyId") ? project.getProperty('signing.keyId') : null
 ext."signing.password" = System.getenv("SIGNING_PASSPHRASE") ?: project.hasProperty("signing.password") ? project.getProperty('signing.password') : null
 ext."signing.secretKeyRingFile" = project.hasProperty("signing.secretKeyRingFile") ? project.getProperty('signing.secretKeyRingFile') : null
@@ -63,9 +63,9 @@ apply plugin: 'idea'
 apply plugin: 'groovy'
 apply plugin: "io.github.groovylang.groovydoc"
 apply plugin: 'com.bmuschko.nexus'
+apply plugin: 'maven-publish'
 
 if (isReleaseVersion) {
-    apply plugin: 'maven-publish'
     apply plugin: "io.github.gradle-nexus.publish-plugin"
     apply plugin: 'signing'
 }
@@ -178,7 +178,7 @@ modifyPom {
 }
 
 publishing {
-    if (isBuildSnapshot) {
+    if (isSnapshot) {
         repositories {
             maven {
                 credentials {
