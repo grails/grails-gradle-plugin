@@ -20,23 +20,20 @@ import grails.util.BuildSettings
 import groovy.transform.CompileStatic
 import org.apache.tools.ant.DirectoryScanner
 import org.gradle.api.Action
+import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.DependencyResolveDetails
-import org.gradle.api.artifacts.ModuleVersionSelector
-import org.gradle.api.artifacts.component.ProjectComponentSelector
 import org.gradle.api.file.CopySpec
-import org.gradle.api.internal.artifacts.ImmutableModuleIdentifierFactory
-import org.gradle.api.internal.artifacts.ivyservice.projectmodule.ProjectPublicationRegistry
 import org.gradle.api.internal.artifacts.publish.ArchivePublishArtifact
-import org.gradle.api.internal.java.JavaLibrary
 import org.gradle.api.plugins.BasePlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
-import org.gradle.configuration.project.ProjectConfigurationActionContainer
 import org.grails.cli.profile.commands.script.GroovyScriptCommand
 import org.grails.gradle.plugin.profiles.tasks.ProfileCompilerTask
 
-import javax.inject.Inject
+
+import static org.gradle.api.plugins.BasePlugin.*
+
 /**
  * A plugin that is capable of compiling a Grails profile into a JAR file for distribution
  *
@@ -44,20 +41,15 @@ import javax.inject.Inject
  * @since 3.1
  */
 @CompileStatic
-class GrailsProfileGradlePlugin extends BasePlugin {
+class GrailsProfileGradlePlugin implements Plugin<Project> {
 
     static final String CONFIGURATION_NAME = 'grails'
 
     public static final String RUNTIME_CONFIGURATION = "runtime"
 
-    @Inject
-    GrailsProfileGradlePlugin( ProjectPublicationRegistry publicationRegistry, ProjectConfigurationActionContainer configurationActionContainer, ImmutableModuleIdentifierFactory immutableModuleIdentifierFactory) {
-        super(publicationRegistry, configurationActionContainer, immutableModuleIdentifierFactory)
-    }
-
     @Override
     void apply(Project project) {
-        super.apply(project)
+        project.getPluginManager().apply(BasePlugin.class)
         project.configurations.create(CONFIGURATION_NAME)
         def profileConfiguration = project.configurations.create(RUNTIME_CONFIGURATION)
 
