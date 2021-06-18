@@ -294,7 +294,7 @@ BINTRAY_KEY=key
         project.afterEvaluate {
             def installTask = taskContainer.findByName("install")
             def publishToSonatypeTask = taskContainer.findByName('publishToSonatype')
-            def closeAndReleaseSonatypeStagingRepositoryTask = taskContainer.findByName('closeSonatypeStagingRepository')
+            def closeAndReleaseSonatypeStagingRepositoryTask = taskContainer.findByName('closeAndReleaseSonatypeStagingRepository')
             def publishToMavenLocal = taskContainer.findByName("publishToMavenLocal")
             if (publishToSonatypeTask != null && taskContainer.findByName("publish${GrailsNameUtils.getClassName(defaultClassifier)}") == null) {
                 taskContainer.register("publish${GrailsNameUtils.getClassName(defaultClassifier)}", { Task task ->
