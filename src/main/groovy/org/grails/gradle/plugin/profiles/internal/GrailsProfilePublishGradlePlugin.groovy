@@ -42,6 +42,20 @@ import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 class GrailsProfilePublishGradlePlugin extends GrailsCentralPublishGradlePlugin {
 
     @Override
+    void apply(Project project) {
+        super.apply(project)
+        final File tempReadmeForJavadoc = Files.createTempFile("README", "txt").toFile()
+        tempReadmeForJavadoc << "https://central.sonatype.org/publish/requirements/#supply-javadoc-and-sources"
+        project.tasks.create("javadocJar", Jar, (Action) { Jar jar ->
+            jar.from(tempReadmeForJavadoc)
+            jar.classifier = "javadoc"
+            jar.destinationDir = new File(project.buildDir, "libs")
+            jar.setDescription("Assembles a jar archive containing the profile javadoc.")
+            jar.setGroup(BUILD_GROUP)
+        })
+    }
+
+    @Override
     protected String getDefaultGrailsCentralReleaseRepo() {
         "https://repo.grails.org/grails/libs-releases-local"
     }
@@ -70,16 +84,6 @@ class GrailsProfilePublishGradlePlugin extends GrailsCentralPublishGradlePlugin 
 
     @Override
     protected void doAddArtefact(Project project, MavenPublication publication) {
-        final File tempReadmeForJavadoc = Files.createTempFile("README", "txt").toFile()
-        tempReadmeForJavadoc << "https://central.sonatype.org/publish/requirements/#supply-javadoc-and-sources"
-        project.tasks.create("javadocJar", Jar, (Action) { Jar jar ->
-            jar.from(tempReadmeForJavadoc)
-            jar.classifier = "javadoc"
-            jar.destinationDir = new File(project.buildDir, "libs")
-            jar.setDescription("Assembles a jar archive containing the profile javadoc.")
-            jar.setGroup(BUILD_GROUP)
-        })
-
         publication.artifact(project.tasks.findByName("jar"))
         publication.pom(new Action<org.gradle.api.publish.maven.MavenPom>() {
             @Override
