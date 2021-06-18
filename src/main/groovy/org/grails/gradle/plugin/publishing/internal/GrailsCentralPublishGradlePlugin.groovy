@@ -117,8 +117,6 @@ BINTRAY_KEY=key
 
         project.afterEvaluate {
             boolean isSnapshot = project.version.endsWith("SNAPSHOT")
-            println("Project Version: " + project.version)
-            println("isSnapshot: " + isSnapshot)
             boolean isRelease = !isSnapshot
             final PluginManager pluginManager = project.getPluginManager()
             pluginManager.apply(MavenPublishPlugin.class)
