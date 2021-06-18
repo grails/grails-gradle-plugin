@@ -94,15 +94,6 @@ BINTRAY_KEY=key
 
     @Override
     void apply(Project project) {
-        boolean isSnapshot = project.version.endsWith("SNAPSHOT")
-        boolean isRelease = !isSnapshot
-        final PluginManager pluginManager = project.getPluginManager()
-        pluginManager.apply(MavenPublishPlugin.class)
-        if (isRelease) {
-            pluginManager.apply(NexusPublishPlugin.class)
-            pluginManager.apply(SigningPlugin.class)
-        }
-
         final ExtensionContainer extensionContainer = project.extensions
         final TaskContainer taskContainer = project.tasks
         final GrailsPublishExtension gpe = extensionContainer.create("grailsPublish", GrailsPublishExtension)
@@ -125,173 +116,181 @@ BINTRAY_KEY=key
         }
 
         project.afterEvaluate {
-            extensionContainer.configure(SigningExtension, {
-                it.required = isRelease
-                it.sign project.publishing.publications.maven
-            })
-        }
+            boolean isSnapshot = project.version.endsWith("SNAPSHOT")
+            println("Project Version: " + project.version)
+            println("isSnapshot: " + isSnapshot)
+            boolean isRelease = !isSnapshot
+            final PluginManager pluginManager = project.getPluginManager()
+            pluginManager.apply(MavenPublishPlugin.class)
 
-        project.tasks.withType(Sign) {
-            onlyIf { isRelease }
-        }
+            if (isRelease) {
+                pluginManager.apply(NexusPublishPlugin.class)
+                pluginManager.apply(SigningPlugin.class)
 
-        project.tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
-            shouldRunAfter(project.tasks.withType(Sign))
-        }
+                extensionContainer.configure(SigningExtension, {
+                    it.required = isRelease
+                    it.sign project.publishing.publications.maven
+                })
 
-        project.publishing {
-            if (isSnapshot) {
-                repositories {
-                    maven {
-                        credentials {
-                            username = artifactoryUsername
-                            password = artifactoryPassword
-                        }
-                        url getDefaultGrailsCentralSnapshotRepo()
-                    }
+                project.tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
+                    shouldRunAfter(project.tasks.withType(Sign))
                 }
             }
 
-            publications {
-                maven(MavenPublication) {
-                    artifactId project.name
-
-                    doAddArtefact(project, delegate)
-                    def sourcesJar = taskContainer.findByName("sourcesJar")
-                    if (sourcesJar != null) {
-                        artifact sourcesJar
+            project.publishing {
+                if (isSnapshot) {
+                    repositories {
+                        maven {
+                            credentials {
+                                username = artifactoryUsername
+                                password = artifactoryPassword
+                            }
+                            url getDefaultGrailsCentralSnapshotRepo()
+                        }
                     }
-                    def javadocJar = taskContainer.findByName("javadocJar")
-                    if (javadocJar != null) {
-                        artifact javadocJar
-                    }
-                    def extraArtefact = getDefaultExtraArtifact(project)
-                    if (extraArtefact) {
-                        artifact extraArtefact
-                    }
+                }
 
-                    pom.withXml {
-                        Node pomNode = asNode()
+                publications {
+                    maven(MavenPublication) {
+                        artifactId project.name
 
-                        if (pomNode.dependencyManagement) {
-                            pomNode.dependencyManagement[0].replaceNode {}
+                        doAddArtefact(project, delegate)
+                        def sourcesJar = taskContainer.findByName("sourcesJar")
+                        if (sourcesJar != null) {
+                            artifact sourcesJar
+                        }
+                        def javadocJar = taskContainer.findByName("javadocJar")
+                        if (javadocJar != null) {
+                            artifact javadocJar
+                        }
+                        def extraArtefact = getDefaultExtraArtifact(project)
+                        if (extraArtefact) {
+                            artifact extraArtefact
                         }
 
-                        if (gpe != null) {
-                            pomNode.children().last() + {
-                                def title = gpe.title ?: project.name
-                                delegate.name title
-                                delegate.description gpe.desc ?: title
+                        pom.withXml {
+                            Node pomNode = asNode()
 
-                                def websiteUrl = gpe.websiteUrl ?: gpe.githubSlug ? "https://github.com/$gpe.githubSlug" : ''
-                                if (!websiteUrl) {
-                                    throw new RuntimeException(getErrorMessage('websiteUrl'))
-                                }
-
-                                delegate.url websiteUrl
-
-
-                                def license = gpe.license
-                                if (license != null) {
-
-                                    def concreteLicense = GrailsPublishExtension.License.LICENSES.get(license.name)
-                                    if (concreteLicense != null) {
-
-                                        delegate.licenses {
-                                            delegate.license {
-                                                delegate.name concreteLicense.name
-                                                delegate.url concreteLicense.url
-                                                delegate.distribution concreteLicense.distribution
-                                            }
-                                        }
-                                    } else if (license.name && license.url) {
-                                        delegate.licenses {
-                                            delegate.license {
-                                                delegate.name license.name
-                                                delegate.url license.url
-                                                delegate.distribution license.distribution
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    throw new RuntimeException(getErrorMessage('license'))
-                                }
-
-                                if (gpe.githubSlug) {
-                                    delegate.scm {
-                                        delegate.url "https://github.com/$gpe.githubSlug"
-                                        delegate.connection "scm:git@github.com:${gpe.githubSlug}.git"
-                                        delegate.developerConnection "scm:git@github.com:${gpe.githubSlug}.git"
-                                    }
-                                    delegate.issueManagement {
-                                        delegate.system "Github Issues"
-                                        delegate.url "https://github.com/$gpe.githubSlug/issues"
-                                    }
-                                } else {
-                                    if (gpe.vcsUrl) {
-                                        delegate.scm {
-                                            delegate.url gpe.vcsUrl
-                                            delegate.connection "scm:$gpe.vcsUrl"
-                                            delegate.developerConnection "scm:$gpe.vcsUrl"
-                                        }
-                                    } else {
-                                        throw new RuntimeException(getErrorMessage('vcsUrl'))
-                                    }
-
-                                    if (gpe.issueTrackerUrl) {
-                                        delegate.issueManagement {
-                                            delegate.system "Issue Tracker"
-                                            delegate.url gpe.issueTrackerUrl
-                                        }
-                                    } else {
-                                        throw new RuntimeException(getErrorMessage('issueTrackerUrl'))
-                                    }
-
-                                }
-
-                                if (gpe.developers) {
-
-                                    delegate.developers {
-                                        for (entry in gpe.developers.entrySet()) {
-                                            delegate.developer {
-                                                delegate.id entry.key
-                                                delegate.name entry.value
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    throw new RuntimeException(getErrorMessage('developers'))
-                                }
+                            if (pomNode.dependencyManagement) {
+                                pomNode.dependencyManagement[0].replaceNode {}
                             }
 
-                        }
+                            if (gpe != null) {
+                                pomNode.children().last() + {
+                                    def title = gpe.title ?: project.name
+                                    delegate.name title
+                                    delegate.description gpe.desc ?: title
 
-                        // simply remove dependencies without a version
-                        // version-less dependencies are handled with dependencyManagement
-                        // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
-                        pomNode.dependencies.dependency.findAll {
-                            it.version.text().isEmpty()
-                        }.each {
-                            it.replaceNode {}
+                                    def websiteUrl = gpe.websiteUrl ?: gpe.githubSlug ? "https://github.com/$gpe.githubSlug" : ''
+                                    if (!websiteUrl) {
+                                        throw new RuntimeException(getErrorMessage('websiteUrl'))
+                                    }
+
+                                    delegate.url websiteUrl
+
+
+                                    def license = gpe.license
+                                    if (license != null) {
+
+                                        def concreteLicense = GrailsPublishExtension.License.LICENSES.get(license.name)
+                                        if (concreteLicense != null) {
+
+                                            delegate.licenses {
+                                                delegate.license {
+                                                    delegate.name concreteLicense.name
+                                                    delegate.url concreteLicense.url
+                                                    delegate.distribution concreteLicense.distribution
+                                                }
+                                            }
+                                        } else if (license.name && license.url) {
+                                            delegate.licenses {
+                                                delegate.license {
+                                                    delegate.name license.name
+                                                    delegate.url license.url
+                                                    delegate.distribution license.distribution
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        throw new RuntimeException(getErrorMessage('license'))
+                                    }
+
+                                    if (gpe.githubSlug) {
+                                        delegate.scm {
+                                            delegate.url "https://github.com/$gpe.githubSlug"
+                                            delegate.connection "scm:git@github.com:${gpe.githubSlug}.git"
+                                            delegate.developerConnection "scm:git@github.com:${gpe.githubSlug}.git"
+                                        }
+                                        delegate.issueManagement {
+                                            delegate.system "Github Issues"
+                                            delegate.url "https://github.com/$gpe.githubSlug/issues"
+                                        }
+                                    } else {
+                                        if (gpe.vcsUrl) {
+                                            delegate.scm {
+                                                delegate.url gpe.vcsUrl
+                                                delegate.connection "scm:$gpe.vcsUrl"
+                                                delegate.developerConnection "scm:$gpe.vcsUrl"
+                                            }
+                                        } else {
+                                            throw new RuntimeException(getErrorMessage('vcsUrl'))
+                                        }
+
+                                        if (gpe.issueTrackerUrl) {
+                                            delegate.issueManagement {
+                                                delegate.system "Issue Tracker"
+                                                delegate.url gpe.issueTrackerUrl
+                                            }
+                                        } else {
+                                            throw new RuntimeException(getErrorMessage('issueTrackerUrl'))
+                                        }
+
+                                    }
+
+                                    if (gpe.developers) {
+
+                                        delegate.developers {
+                                            for (entry in gpe.developers.entrySet()) {
+                                                delegate.developer {
+                                                    delegate.id entry.key
+                                                    delegate.name entry.value
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        throw new RuntimeException(getErrorMessage('developers'))
+                                    }
+                                }
+
+                            }
+
+                            // simply remove dependencies without a version
+                            // version-less dependencies are handled with dependencyManagement
+                            // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
+                            pomNode.dependencies.dependency.findAll {
+                                it.version.text().isEmpty()
+                            }.each {
+                                it.replaceNode {}
+                            }
                         }
                     }
                 }
             }
-        }
 
-        project.nexusPublishing {
-            repositories {
-                sonatype {
-//                    nexusUrl = project.uri(ossNexusUrl)
-//                    snapshotRepositoryUrl = project.uri(ossSnapshotUrl)
-                    username = ossUser
-                    password = ossPass
-                    stagingProfileId = ossStagingProfileId
+            if (isRelease) {
+                project.nexusPublishing {
+                    repositories {
+                        sonatype {
+        //                    nexusUrl = project.uri(ossNexusUrl)
+        //                    snapshotRepositoryUrl = project.uri(ossSnapshotUrl)
+                            username = ossUser
+                            password = ossPass
+                            stagingProfileId = ossStagingProfileId
+                        }
+                    }
                 }
             }
-        }
 
-        project.afterEvaluate {
             def installTask = taskContainer.findByName("install")
             def publishToSonatypeTask = taskContainer.findByName('publishToSonatype')
             def closeAndReleaseSonatypeStagingRepositoryTask = taskContainer.findByName('closeAndReleaseSonatypeStagingRepository')
