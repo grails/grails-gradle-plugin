@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.grails.gradle.plugin.profiles
+package org.grails.gradle.plugin.profiles.internal
 
-import groovy.transform.CompileDynamic
+
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.Project
@@ -23,10 +23,14 @@ import org.gradle.api.XmlProvider
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.SelfResolvingDependency
-import org.gradle.api.artifacts.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
-import org.grails.gradle.plugin.publishing.GrailsCentralPublishGradlePlugin
+import org.gradle.api.tasks.bundling.Jar
+import org.grails.gradle.plugin.profiles.GrailsProfileGradlePlugin
+import org.grails.gradle.plugin.publishing.internal.GrailsCentralPublishGradlePlugin
 
+import java.nio.file.Files
+
+import static org.gradle.api.plugins.BasePlugin.BUILD_GROUP
 
 /**
  * A plugin for publishing profiles
@@ -36,6 +40,20 @@ import org.grails.gradle.plugin.publishing.GrailsCentralPublishGradlePlugin
  */
 @CompileStatic
 class GrailsProfilePublishGradlePlugin extends GrailsCentralPublishGradlePlugin {
+
+    @Override
+    void apply(Project project) {
+        super.apply(project)
+        final File tempReadmeForJavadoc = Files.createTempFile("README", "txt").toFile()
+        tempReadmeForJavadoc << "https://central.sonatype.org/publish/requirements/#supply-javadoc-and-sources"
+        project.tasks.create("javadocJar", Jar, (Action) { Jar jar ->
+            jar.from(tempReadmeForJavadoc)
+            jar.classifier = "javadoc"
+            jar.destinationDir = new File(project.buildDir, "libs")
+            jar.setDescription("Assembles a jar archive containing the profile javadoc.")
+            jar.setGroup(BUILD_GROUP)
+        })
+    }
 
     @Override
     protected String getDefaultGrailsCentralReleaseRepo() {
