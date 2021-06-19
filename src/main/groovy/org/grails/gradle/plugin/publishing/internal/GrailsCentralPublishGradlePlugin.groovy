@@ -42,9 +42,6 @@ import static com.bmuschko.gradle.nexus.NexusPlugin.getSIGNING_PASSWORD
  */
 class GrailsCentralPublishGradlePlugin implements Plugin<Project> {
 
-    static final String DEFAULT_SONATYPE_RELEASE_PUBLISH_URL = "https://s01.oss.sonatype.org/service/local/"
-    static final String DEFAULT_SONATYPE_SNAPSHOT_PUBLISH_URL = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-
     String getErrorMessage(String missingSetting) {
         return """No '$missingSetting' was specified. Please provide a valid publishing configuration. Example:
 
@@ -120,20 +117,6 @@ BINTRAY_KEY=key
             boolean isRelease = !isSnapshot
             final PluginManager pluginManager = project.getPluginManager()
             pluginManager.apply(MavenPublishPlugin.class)
-
-            if (isRelease) {
-                pluginManager.apply(NexusPublishPlugin.class)
-                pluginManager.apply(SigningPlugin.class)
-
-                extensionContainer.configure(SigningExtension, {
-                    it.required = isRelease
-                    it.sign project.publishing.publications.maven
-                })
-
-                project.tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
-                    shouldRunAfter(project.tasks.withType(Sign))
-                }
-            }
 
             project.publishing {
                 if (isSnapshot) {
@@ -276,11 +259,33 @@ BINTRAY_KEY=key
             }
 
             if (isRelease) {
+                pluginManager.apply(NexusPublishPlugin.class)
+                pluginManager.apply(SigningPlugin.class)
+
+                extensionContainer.configure(SigningExtension, {
+                    it.required = isRelease
+                    it.sign project.publishing.publications.maven
+                })
+
+                project.tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
+                    shouldRunAfter(project.tasks.withType(Sign))
+                }
+
+                project.tasks.withType(Sign) {
+                    onlyIf { isRelease }
+                }
+            }
+
+            if (isRelease) {
                 project.nexusPublishing {
                     repositories {
                         sonatype {
-        //                    nexusUrl = project.uri(ossNexusUrl)
-        //                    snapshotRepositoryUrl = project.uri(ossSnapshotUrl)
+                            if (ossNexusUrl) {
+                                nexusUrl = project.uri(ossNexusUrl)
+                            }
+                            if (ossSnapshotUrl) {
+                                snapshotRepositoryUrl = project.uri(ossSnapshotUrl)
+                            }
                             username = ossUser
                             password = ossPass
                             stagingProfileId = ossStagingProfileId
