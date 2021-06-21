@@ -97,8 +97,8 @@ BINTRAY_KEY=key
 
         final String artifactoryUsername = project.hasProperty("artifactoryPublishUsername") ? project.artifactoryPublishUsername : System.getenv("ARTIFACTORY_USERNAME") ?: ''
         final String artifactoryPassword = project.hasProperty("artifactoryPublishPassword") ? project.artifactoryPublishPassword : System.getenv("ARTIFACTORY_PASSWORD") ?: ''
-        final String ossNexusUrl = project.hasProperty("sonatypeNexusUrl") ? project.sonatypeNexusUrl : System.getenv("SONATYPE_NEXUS_URL") ?: DEFAULT_SONATYPE_RELEASE_PUBLISH_URL
-        final String ossSnapshotUrl = project.hasProperty("sonatypeSnapshotUrl") ? project.sonatypeSnapshotUrl : System.getenv("SONATYPE_SNAPSHOT_URL") ?: DEFAULT_SONATYPE_SNAPSHOT_PUBLISH_URL
+        final String ossNexusUrl = project.hasProperty("sonatypeNexusUrl") ? project.sonatypeNexusUrl : System.getenv("SONATYPE_NEXUS_URL") ?: ''
+        final String ossSnapshotUrl = project.hasProperty("sonatypeSnapshotUrl") ? project.sonatypeSnapshotUrl : System.getenv("SONATYPE_SNAPSHOT_URL") ?: ''
         final String ossUser = project.hasProperty("sonatypeOssUsername") ? project.sonatypeOssUsername : System.getenv("SONATYPE_USERNAME") ?: ''
         final String ossPass = project.hasProperty("sonatypeOssPassword") ? project.sonatypeOssPassword : System.getenv("SONATYPE_PASSWORD") ?: ''
         final String ossStagingProfileId = project.hasProperty("sonatypeOssStagingProfileId") ? project.sonatypeOssStagingProfileId : System.getenv("SONATYPE_STAGING_PROFILE_ID") ?: ''
