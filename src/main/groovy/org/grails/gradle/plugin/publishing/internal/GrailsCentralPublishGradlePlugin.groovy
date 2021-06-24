@@ -33,6 +33,7 @@ import org.gradle.plugins.signing.SigningPlugin
 
 import static com.bmuschko.gradle.nexus.NexusPlugin.getSIGNING_KEY_ID
 import static com.bmuschko.gradle.nexus.NexusPlugin.getSIGNING_PASSWORD
+import static com.bmuschko.gradle.nexus.NexusPlugin.getSIGNING_KEYRING
 
 /**
  * A plugin to setup publishing to Grails central repo
@@ -105,12 +106,10 @@ BINTRAY_KEY=key
 
         final ExtraPropertiesExtension extraPropertiesExtension = extensionContainer.findByType(ExtraPropertiesExtension)
 
-        if (!project.hasProperty(SIGNING_KEY_ID)) {
-            extraPropertiesExtension.setProperty(SIGNING_KEY_ID, System.getenv("SIGNING_KEY") ?: null)
-        }
-        if (!project.hasProperty(SIGNING_PASSWORD)) {
-            extraPropertiesExtension.setProperty(SIGNING_PASSWORD, System.getenv("SIGNING_PASSPHRASE") ?: null)
-        }
+        extraPropertiesExtension.setProperty(SIGNING_KEY_ID, project.hasProperty(SIGNING_KEY_ID) ? project[SIGNING_KEY_ID] : System.getenv("SIGNING_KEY") ?: null)
+        extraPropertiesExtension.setProperty(SIGNING_PASSWORD, project.hasProperty(SIGNING_PASSWORD) ? project[SIGNING_PASSWORD] : System.getenv("SIGNING_PASSPHRASE") ?: null)
+        extraPropertiesExtension.setProperty(SIGNING_KEYRING, project.hasProperty(SIGNING_KEYRING) ? project[SIGNING_KEYRING] : System.getenv("SIGNING_KEYRING") ?: null)
+
 
         project.afterEvaluate {
             boolean isSnapshot = project.version.endsWith("SNAPSHOT")
