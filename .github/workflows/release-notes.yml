@@ -4,7 +4,7 @@ on:
     types: [closed,reopened]
   push:
     branches:
-      - main
+      - 4.0.x
   workflow_dispatch:
 jobs:
   release_notes:
@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           prerelease: false
-          commitish: main
+          commitish: 4.0.x
       # Otherwise:
       - name: Export Gradle Properties
         if: steps.check_release_drafter.outputs.has_release_drafter == 'false'
