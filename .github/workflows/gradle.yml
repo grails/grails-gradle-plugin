@@ -46,3 +46,14 @@ jobs:
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
         run: |
           ./gradlew publish
+      - name: Publish to Github Pages
+        if: success() && github.event_name == 'push' && matrix.java == '8'
+        uses: micronaut-projects/github-pages-deploy-action@master
+        env:
+          TARGET_REPOSITORY: ${{ steps.docs_target.outputs.value }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build/docs
+          DOC_FOLDER: gh-pages
+          COMMIT_EMAIL: behlp@objectcomputing.com
+          COMMIT_NAME: Puneet Behl

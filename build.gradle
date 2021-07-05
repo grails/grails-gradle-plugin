@@ -130,6 +130,7 @@ configure([compileJava, compileTestJava]) {
 }
 
 configure([groovydoc]) {
+    destinationDir = project.file("build/docs/api")
     classpath += configurations.documentation
     jvmArgs "-Xmx512M"
 }
