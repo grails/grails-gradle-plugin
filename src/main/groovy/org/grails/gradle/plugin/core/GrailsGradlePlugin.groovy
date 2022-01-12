@@ -97,6 +97,8 @@ class GrailsGradlePlugin extends GroovyPlugin {
             super.apply(project)
         }
 
+        excludeDependencies(project)
+
         configureProfile(project)
 
         applyDefaultPlugins(project)
@@ -140,6 +142,12 @@ class GrailsGradlePlugin extends GroovyPlugin {
         configureRunCommand(project)
 
         configurePathingJar(project)
+    }
+
+    protected void excludeDependencies(Project project) {
+        project.configurations.all ({ Configuration configuration ->
+            configuration.exclude group:"org.slf4j", module: "slf4j-simple"
+        })
     }
 
     protected void configureProfile(Project project) {
