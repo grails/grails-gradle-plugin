@@ -59,7 +59,7 @@ ext.pomInfo = {
 }
 
 apply plugin: 'idea'
-apply plugin: 'java-library'
+apply plugin: 'java-gradle-plugin'
 apply plugin: 'groovy'
 apply plugin: 'com.bmuschko.nexus'
 apply plugin: 'maven-publish'
@@ -106,6 +106,43 @@ dependencies {
     api "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
     api "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
     api "com.netflix.nebula:gradle-extra-configurations-plugin:7.0.0"
+}
+
+gradlePlugin {
+    plugins {
+        grailsCore {
+            id = 'org.grails.grails-core'
+            implementationClass = 'org.grails.gradle.plugin.core.GrailsGradlePlugin'
+        }
+        grailsDoc {
+            id = 'org.grails.grails-doc'
+            implementationClass = 'org.grails.gradle.plugin.doc.GrailsDocGradlePlugin'
+        }
+        grailsGsp {
+            id = 'org.grails.grails-gsp'
+            implementationClass = 'org.grails.gradle.plugin.web.gsp.GroovyPagePlugin'
+        }
+        grailsPlugin {
+            id = 'org.grails.grails-plugin'
+            implementationClass = 'org.grails.gradle.plugin.core.GrailsPluginGradlePlugin'
+        }
+        grailsProfile {
+            id = 'org.grails.grails-profile'
+            implementationClass = 'org.grails.gradle.plugin.profiles.GrailsProfileGradlePlugin'
+        }
+        grailsWeb {
+            id = 'org.grails.grails-web'
+            implementationClass = 'org.grails.gradle.plugin.web.GrailsWebGradlePlugin'
+        }
+        grailsPluginPublish {
+            id = 'org.grails.internal.grails-plugin-publish'
+            implementationClass = 'org.grails.gradle.plugin.publishing.internal.GrailsCentralPublishGradlePlugin'
+        }
+        grailsProfilePublish {
+            id = 'org.grails.internal.grails-profile-publish'
+            implementationClass = 'org.grails.gradle.plugin.profiles.internal.GrailsProfilePublishGradlePlugin'
+        }
+    }
 }
 
 jar {
