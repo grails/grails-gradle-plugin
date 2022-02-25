@@ -41,14 +41,15 @@ class PublishGuideTask extends AbstractCompile {
     @Optional
     File propertiesFile
 
-//    @InputDirectory
+    @InputDirectory
     @Optional
     File groovydocDir
 
-//    @InputDirectory
+    @InputDirectory
     @Optional
     File javadocDir
 
+    @InputDirectory
     File srcDir
 
     @Override
