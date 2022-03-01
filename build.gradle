@@ -180,7 +180,7 @@ configure([javadoc]) {
 afterEvaluate {
     signing {
         required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
-        sign publishing.publications.maven
+        sign publishing.publications.pluginMaven
     }
 }
 
@@ -232,9 +232,7 @@ publishing {
     }
 
     publications {
-        maven(MavenPublication) {
-            from components.java
-
+        pluginMaven(MavenPublication) {
             afterEvaluate {
                 artifact source: sourcesJar, classifier: "sources"
                 artifact source: javadocJar, classifier: "javadoc"
