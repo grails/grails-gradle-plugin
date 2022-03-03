@@ -24,8 +24,6 @@ ext."signing.password" = System.getenv("SIGNING_PASSPHRASE") ?: project.hasPrope
 ext."signing.secretKeyRingFile" = project.hasProperty("signing.secretKeyRingFile") ? project.getProperty('signing.secretKeyRingFile') : null
 
 ext.pomInfo = {
-    delegate.name 'Grails Gradle Plugin'
-    delegate.description 'A Gradle plugin for Grails which provides a bunch of useful plugins'
     delegate.url 'https://github.com/grails/grails-gradle-plugin'
 
     delegate.licenses {
@@ -111,34 +109,50 @@ dependencies {
 gradlePlugin {
     plugins {
         grailsCore {
+            displayName = "Grails Core Gradle Plugin"
+            description = 'The main Grails gradle plugin implementation'
             id = 'org.grails.grails-core'
             implementationClass = 'org.grails.gradle.plugin.core.GrailsGradlePlugin'
         }
         grailsDoc {
+            displayName = "Grails Doc Gradle Plugin"
+            description = 'Adds Grails doc publishing support'
             id = 'org.grails.grails-doc'
             implementationClass = 'org.grails.gradle.plugin.doc.GrailsDocGradlePlugin'
         }
         grailsGsp {
+            displayName = "Grails GSP Gradle Plugin"
+            description = 'A plugin that adds support for compiling Groovy Server Pages (GSP)'
             id = 'org.grails.grails-gsp'
             implementationClass = 'org.grails.gradle.plugin.web.gsp.GroovyPagePlugin'
         }
         grailsPlugin {
+            displayName = "Grails-Plugin Gradle Plugin"
+            description = 'A Gradle plugin for Grails plugins'
             id = 'org.grails.grails-plugin'
             implementationClass = 'org.grails.gradle.plugin.core.GrailsPluginGradlePlugin'
         }
         grailsProfile {
+            displayName = "Grails Profile Gradle Plugin"
+            description = 'A plugin that is capable of compiling a Grails profile into a JAR file for distribution'
             id = 'org.grails.grails-profile'
             implementationClass = 'org.grails.gradle.plugin.profiles.GrailsProfileGradlePlugin'
         }
         grailsWeb {
+            displayName = "Grails Web Gradle Plugin"
+            description = 'Adds web specific extensions'
             id = 'org.grails.grails-web'
             implementationClass = 'org.grails.gradle.plugin.web.GrailsWebGradlePlugin'
         }
         grailsPluginPublish {
+            displayName = "Grails Publish Gradle Plugin"
+            description = 'A plugin to setup publishing to Grails central repo'
             id = 'org.grails.internal.grails-plugin-publish'
             implementationClass = 'org.grails.gradle.plugin.publishing.internal.GrailsCentralPublishGradlePlugin'
         }
         grailsProfilePublish {
+            displayName = "Grails Profile Publish Plugin"
+            description = 'A plugin for publishing profiles'
             id = 'org.grails.internal.grails-profile-publish'
             implementationClass = 'org.grails.gradle.plugin.profiles.internal.GrailsProfilePublishGradlePlugin'
         }
@@ -180,7 +194,9 @@ configure([javadoc]) {
 afterEvaluate {
     signing {
         required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
-        sign publishing.publications.pluginMaven
+        Publication[] publications = new Publication[publishing.publications.size()]
+        publishing.publications.findAll().toArray(publications)
+        sign(publications)
     }
 }
 
@@ -233,16 +249,31 @@ publishing {
 
     publications {
         pluginMaven(MavenPublication) {
+            pom {
+                name = "Grails Gradle Plugin"
+                description = "A Gradle plugin for Grails which provides a bunch of useful plugins"
+            }
             afterEvaluate {
                 artifact source: sourcesJar, classifier: "sources"
                 artifact source: javadocJar, classifier: "javadoc"
             }
             pom.withXml {
                 def xml = asNode()
-
                 xml.children().last() + pomInfo
             }
 
         }
     }
 }
+
+project.afterEvaluate {
+    project.publishing.publications.each { MavenPublication publication->
+        if (publication.name != "pluginMaven") {
+            publication.pom.withXml {
+                def xml = asNode()
+                xml.children().last() + pomInfo
+            }
+        }
+    }
+}
+
