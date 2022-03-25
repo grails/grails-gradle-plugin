@@ -190,6 +190,7 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         jarTask.exclude "application.yml"
         jarTask.exclude "application.groovy"
         jarTask.exclude "logback.groovy"
+        jarTask.exclude "logback.xml"
     }
 
     @CompileDynamic
