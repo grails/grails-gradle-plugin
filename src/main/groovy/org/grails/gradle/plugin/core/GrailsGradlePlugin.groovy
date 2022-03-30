@@ -531,10 +531,6 @@ class GrailsGradlePlugin extends GroovyPlugin {
                         'info.app.grailsVersion': grailsVersion
                 ]
 
-                task.from(project.relativePath("src/main/templates")) {
-                    into("META-INF/templates")
-                }
-
                 if (!native2ascii) {
                     task.from(sourceSet.resources) {
                         include '**/*.properties'
