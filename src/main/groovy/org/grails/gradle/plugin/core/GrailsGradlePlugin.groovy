@@ -184,8 +184,12 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
     @CompileDynamic
     private void applyBomImport(DependencyManagementExtension dme, project) {
+        String springBootVersion = project.findProperty('springBootVersion')
         dme.imports({
             mavenBom("org.grails:grails-bom:${project.properties['grailsVersion']}")
+            if (springBootVersion) {
+                mavenBom("org.springframework.boot:spring-boot-starter-parent:${springBootVersion}")
+            }
         })
         dme.setApplyMavenExclusions(false)
     }
@@ -249,6 +253,16 @@ class GrailsGradlePlugin extends GroovyPlugin {
                 } as Action<DependencyResolveDetails>)
             } as Action<Configuration>)
         }
+        project.configurations.all({ Configuration configuration ->
+            configuration.resolutionStrategy.eachDependency({ DependencyResolveDetails details ->
+                String dependencyName = details.requested.name
+                String group = details.requested.group
+                if (group == 'jakarta.annotation' && dependencyName == 'jakarta.annotation-api') {
+                    details.useVersion('2.0.0')
+                    return
+                }
+            } as Action<DependencyResolveDetails>)
+        } as Action<Configuration>)
     }
 
     @CompileStatic
