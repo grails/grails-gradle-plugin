@@ -58,6 +58,7 @@ import org.grails.gradle.plugin.model.GrailsClasspathToolingModelBuilder
 import org.grails.gradle.plugin.run.FindMainClassTask
 import org.grails.gradle.plugin.util.SourceSets
 import org.grails.io.support.FactoriesLoaderSupport
+import org.springframework.boot.cli.compiler.dependencies.SpringBootDependenciesDependencyManagement
 import org.springframework.boot.gradle.dsl.SpringBootExtension
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
 import org.springframework.boot.gradle.tasks.bundling.BootArchive
@@ -184,12 +185,10 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
     @CompileDynamic
     private void applyBomImport(DependencyManagementExtension dme, project) {
-        String springBootVersion = project.findProperty('springBootVersion')
+        String springBootVersion = resolveSpringBootVersion(project)
         dme.imports({
             mavenBom("org.grails:grails-bom:${project.properties['grailsVersion']}")
-            if (springBootVersion) {
-                mavenBom("org.springframework.boot:spring-boot-starter-parent:${springBootVersion}")
-            }
+            mavenBom("org.springframework.boot:spring-boot-starter-parent:${springBootVersion}")
         })
         dme.setApplyMavenExclusions(false)
     }
@@ -392,6 +391,16 @@ class GrailsGradlePlugin extends GroovyPlugin {
             grailsVersion = grailsCoreDep.version
         }
         grailsVersion
+    }
+
+    protected String resolveSpringBootVersion(Project project) {
+        def springBootVersion = project.findProperty('springBootVersion')
+
+        if (!springBootVersion) {
+            springBootVersion = new SpringBootDependenciesDependencyManagement().getSpringBootVersion()
+        }
+
+        springBootVersion
     }
 
     @CompileDynamic
