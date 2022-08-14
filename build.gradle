@@ -67,16 +67,25 @@ if (isReleaseVersion) {
     apply plugin: 'signing'
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "1.11"
+targetCompatibility = "1.11"
 
 configurations {
     documentation
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency {DependencyResolveDetails details ->
+        if (details.requested.group == "org.codehaus.groovy") {
+            details.useTarget(group: "org.apache.groovy", name: details.requested.name, version: groovyVersion)
+            details.because "The dependency coordinates are changed in Apache Groovy 4"
+        }
+    }
+}
+
 dependencies {
     documentation "org.fusesource.jansi:jansi:2.4.0"
-    documentation "org.codehaus.groovy:groovy-cli-picocli:$groovyVersion"
+    documentation "org.apache.groovy:groovy-cli-picocli:$groovyVersion"
 
     api gradleApi()
     api "io.github.gradle-nexus:publish-plugin:1.1.0"
@@ -91,7 +100,7 @@ dependencies {
         exclude group: "net.java.dev.jna", module: "jna"
 
         // Ant
-        exclude group: "org.codehaus.groovy", module: "groovy-ant"
+        exclude group: "org.apache.groovy", module: "groovy-ant"
         exclude group: "org.apache.ant", module: "ant"
         exclude group: "org.apache.ant", module: "ant-launcher"
         exclude group: "org.apache.ivy", module: "ivy"
