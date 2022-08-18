@@ -195,7 +195,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
     }
 
     protected String getDefaultMicronautVersion() {
-        '3.5.3'
+        '3.5.4'
     }
 
     void addDefaultProfile(Project project, Configuration profileConfig) {
@@ -496,12 +496,19 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
     protected void registerFindMainClassTask(Project project) {
         TaskContainer taskContainer = project.tasks
-        if (taskContainer.findByName("findMainClass") == null) {
-            def findMainClassTask = taskContainer.create("findMainClass", FindMainClassTask)
-            findMainClassTask.mustRunAfter taskContainer.withType(GroovyCompile)
-            taskContainer.withType(BootArchive) { BootArchive task ->
-                task.dependsOn findMainClassTask
-            }
+        def findMainClassTask = taskContainer.findByName("findMainClass")
+        if (findMainClassTask == null) {
+            findMainClassTask = project.tasks.register("findMainClass", FindMainClassTask).get()
+            findMainClassTask.mustRunAfter(project.tasks.withType(GroovyCompile))
+        } else if (!FindMainClassTask.class.isAssignableFrom(findMainClassTask.class)) {
+            def grailsFindMainClass = project.tasks.register("grailsFindMainClass", FindMainClassTask).get()
+            grailsFindMainClass.mustRunAfter(findMainClassTask)
+            findMainClassTask.dependsOn(grailsFindMainClass)
+        }
+
+        def bootRepackageTask = project.tasks.findByName("bootRepackage")
+        if (bootRepackageTask) {
+            bootRepackageTask.dependsOn findMainClassTask
         }
     }
 
