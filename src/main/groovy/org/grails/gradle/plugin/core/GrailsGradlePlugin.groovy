@@ -464,12 +464,14 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
     protected void registerFindMainClassTask(Project project) {
         TaskContainer taskContainer = project.tasks
-        if (taskContainer.findByName("findMainClass") == null) {
-            def findMainClassTask = taskContainer.create("findMainClass", FindMainClassTask)
-            findMainClassTask.mustRunAfter taskContainer.withType(GroovyCompile)
-            taskContainer.withType(BootArchive) { BootArchive task ->
-                task.dependsOn findMainClassTask
-            }
+        def findMainClassTask = taskContainer.findByName("findMainClass")
+        if (findMainClassTask == null) {
+            findMainClassTask = project.tasks.register("findMainClass", FindMainClassTask).get()
+            findMainClassTask.mustRunAfter(project.tasks.withType(GroovyCompile))
+        } else if (!FindMainClassTask.class.isAssignableFrom(findMainClassTask.class)) {
+            def grailsFindMainClass = project.tasks.register("grailsFindMainClass", FindMainClassTask).get()
+            grailsFindMainClass.dependsOn(findMainClassTask)
+            findMainClassTask.finalizedBy(grailsFindMainClass)
         }
     }
 
