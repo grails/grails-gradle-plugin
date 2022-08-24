@@ -473,11 +473,6 @@ class GrailsGradlePlugin extends GroovyPlugin {
             grailsFindMainClass.dependsOn(findMainClassTask)
             findMainClassTask.finalizedBy(grailsFindMainClass)
         }
-
-        def bootRepackageTask = project.tasks.findByName("bootRepackage")
-        if (bootRepackageTask) {
-            bootRepackageTask.dependsOn findMainClassTask
-        }
     }
 
     /**
