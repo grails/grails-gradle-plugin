@@ -319,7 +319,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
                     project.tasks.create(taskName, ApplicationContextCommandTask) {
                         classpath = fileCollection
                         command = commandName
-                        systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.name)
+                        systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.getName())
                         if (project.hasProperty('args')) {
                             args(CommandLineParser.translateCommandline(project.args))
                         }
