@@ -93,12 +93,11 @@ class ProfileCompilerTask extends AbstractCompile {
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
         def yaml = new Yaml(new SafeConstructor(), new Representer(), options)
         Map<String, Object> profileData
-        if(profileYmlExists) {
+        if (profileYmlExists) {
             profileData = (Map<String, Object>) config.withReader { BufferedReader r ->
                 yaml.load(r)
             }
-        }
-        else {
+        } else {
             profileData = new LinkedHashMap<String, Object>()
         }
 
@@ -107,7 +106,7 @@ class ProfileCompilerTask extends AbstractCompile {
         profileFile.parentFile.mkdirs()
 
 
-        if(!profileData.containsKey("extends")) {
+        if (!profileData.containsKey("extends")) {
             List<String> dependencies = []
             project.configurations.getByName(GrailsProfileGradlePlugin.RUNTIME_CONFIGURATION).allDependencies.all() { Dependency d ->
                 dependencies.add("${d.group}:${d.name}:${d.version}".toString())
@@ -123,33 +122,33 @@ class ProfileCompilerTask extends AbstractCompile {
         } as File[]
 
         Map<String, String> commandNames = [:]
-        for(File f in groovySourceFiles) {
+        for (File f in groovySourceFiles) {
             def fn = f.name
             commandNames.put(fn - '.groovy', fn)
         }
-        for(File f in ymlSourceFiles) {
+        for (File f in ymlSourceFiles) {
             def fn = f.name
             commandNames.put(fn - '.yml', fn)
         }
 
-        if(commandNames) {
+        if (commandNames) {
             profileData.put(PROFILE_COMMANDS, commandNames)
         }
 
-        if( profileYmlExists ) {
+        if (profileYmlExists) {
             def parentDir = config.parentFile.canonicalFile
             def featureDirs = new File(parentDir, "features").listFiles({ File f -> f.isDirectory() && !f.name.startsWith('.') } as FileFilter)
-            if(featureDirs) {
-                Map map = (Map)profileData.get("features")
-                if(map == null) {
+            if (featureDirs) {
+                Map map = (Map) profileData.get("features")
+                if (map == null) {
                     map = [:]
                     profileData.put("features", map)
                 }
                 List featureNames = []
-                for(f in featureDirs) {
+                for (f in featureDirs) {
                     featureNames.add f.name
                 }
-                if(featureNames) {
+                if (featureNames) {
                     map.put("provided", featureNames)
                 }
                 profileData.put("features", map)
@@ -158,15 +157,15 @@ class ProfileCompilerTask extends AbstractCompile {
 
 
         List<String> templates = []
-        if(templatesDir?.exists()) {
+        if (templatesDir?.exists()) {
             project.fileTree(templatesDir).visit { FileVisitDetails f ->
-                if(!f.isDirectory() && !f.name.startsWith('.')) {
+                if (!f.isDirectory() && !f.name.startsWith('.')) {
                     templates.add f.relativePath.pathString
                 }
             }
         }
 
-        if(templates) {
+        if (templates) {
             profileData.put("templates", templates)
         }
 
@@ -174,7 +173,7 @@ class ProfileCompilerTask extends AbstractCompile {
             yaml.dump(profileData, w)
         }
 
-        if(groovySourceFiles) {
+        if (groovySourceFiles) {
 
             CompilerConfiguration configuration = new CompilerConfiguration()
             configuration.setScriptBaseClass(GroovyScriptCommand.name)
@@ -185,9 +184,9 @@ class ProfileCompilerTask extends AbstractCompile {
             importCustomizer.addStarImports("org.grails.cli.interactive.completers")
             importCustomizer.addStarImports("grails.util")
             importCustomizer.addStarImports("grails.codegen.model")
-            configuration.addCompilationCustomizers(importCustomizer,new ASTTransformationCustomizer(new GroovyScriptCommandTransform()))
+            configuration.addCompilationCustomizers(importCustomizer, new ASTTransformationCustomizer(new GroovyScriptCommandTransform()))
 
-            for(source in groovySourceFiles) {
+            for (source in groovySourceFiles) {
 
                 CompilationUnit compilationUnit = new CompilationUnit(configuration)
                 configuration.compilationCustomizers.clear()
