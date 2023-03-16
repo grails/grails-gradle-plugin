@@ -195,7 +195,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
     }
 
     protected String getDefaultMicronautVersion() {
-        '3.5.4'
+        '3.5.7'
     }
 
     void addDefaultProfile(Project project, Configuration profileConfig) {
@@ -210,7 +210,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
 
             Task buildPropertiesTask = project.tasks.create("buildProperties")
-            Map<String, Object> buildPropertiesContents = ['grails.env': Environment.isSystemSet() ? Environment.current.name : Environment.PRODUCTION.name,
+            Map<String, Object> buildPropertiesContents = ['grails.env': Environment.isSystemSet() ? Environment.getCurrent().getName() : Environment.PRODUCTION.getName(),
                                                            'info.app.name': project.name,
                                                            'info.app.version':  project.version instanceof Serializable ? project.version : project.version.toString(),
                                                            'info.app.grailsVersion': project.properties.get('grailsVersion')]
@@ -319,7 +319,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
                     project.tasks.create(taskName, ApplicationContextCommandTask) {
                         classpath = fileCollection
                         command = commandName
-                        systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.name)
+                        systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.getName())
                         if (project.hasProperty('args')) {
                             args(CommandLineParser.translateCommandline(project.args))
                         }
@@ -431,8 +431,8 @@ class GrailsGradlePlugin extends GroovyPlugin {
         TaskContainer tasks = project.tasks
 
         String grailsEnvSystemProperty = System.getProperty(Environment.KEY)
-        tasks.withType(Test).each systemPropertyConfigurer.curry(grailsEnvSystemProperty ?: Environment.TEST.name)
-        tasks.withType(JavaExec).each systemPropertyConfigurer.curry(grailsEnvSystemProperty ?: Environment.DEVELOPMENT.name)
+        tasks.withType(Test).each systemPropertyConfigurer.curry(grailsEnvSystemProperty ?: Environment.TEST.getName())
+        tasks.withType(JavaExec).each systemPropertyConfigurer.curry(grailsEnvSystemProperty ?: Environment.DEVELOPMENT.getName())
     }
 
     protected void configureConsoleTask(Project project) {
@@ -502,13 +502,8 @@ class GrailsGradlePlugin extends GroovyPlugin {
             findMainClassTask.mustRunAfter(project.tasks.withType(GroovyCompile))
         } else if (!FindMainClassTask.class.isAssignableFrom(findMainClassTask.class)) {
             def grailsFindMainClass = project.tasks.register("grailsFindMainClass", FindMainClassTask).get()
-            grailsFindMainClass.mustRunAfter(findMainClassTask)
-            findMainClassTask.dependsOn(grailsFindMainClass)
-        }
-
-        def bootRepackageTask = project.tasks.findByName("bootRepackage")
-        if (bootRepackageTask) {
-            bootRepackageTask.dependsOn findMainClassTask
+            grailsFindMainClass.dependsOn(findMainClassTask)
+            findMainClassTask.finalizedBy(grailsFindMainClass)
         }
     }
 
@@ -611,7 +606,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
         if (project.tasks.findByName("runScript") == null) {
             project.tasks.create("runScript", ApplicationContextScriptTask) {
                 classpath = project.sourceSets.main.runtimeClasspath + project.configurations.console
-                systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.name)
+                systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.getName())
                 if (project.hasProperty('args')) {
                     args(CommandLineParser.translateCommandline(project.args))
                 }
@@ -624,7 +619,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
         if (project.tasks.findByName("runCommand") == null) {
             project.tasks.create("runCommand", ApplicationContextCommandTask) {
                 classpath = project.sourceSets.main.runtimeClasspath + project.configurations.console
-                systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.name)
+                systemProperty Environment.KEY, System.getProperty(Environment.KEY, Environment.DEVELOPMENT.getName())
                 if (project.hasProperty('args')) {
                     args(CommandLineParser.translateCommandline(project.args))
                 }

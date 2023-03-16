@@ -1,15 +1,17 @@
 package org.grails.gradle.plugin.web.gsp
 
-import grails.io.ResourceUtils
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
-import org.codehaus.groovy.tools.shell.util.PackageHelper
 import org.gradle.api.Action
-import org.gradle.api.provider.Property
+import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.LocalState
 import org.gradle.api.tasks.Nested
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
@@ -35,10 +37,10 @@ class GroovyPageForkCompileTask extends AbstractCompile {
     @Optional
     String packageName
 
-    @InputDirectory
+    @Internal
     File srcDir
 
-    @Input
+    @LocalState
     String tmpDirPath
 
     /**
@@ -55,6 +57,12 @@ class GroovyPageForkCompileTask extends AbstractCompile {
 
     @Nested
     GspCompileOptions compileOptions = new GspCompileOptions()
+
+    @Override
+    @PathSensitive(PathSensitivity.RELATIVE)
+    FileTree getSource() {
+        return super.getSource()
+    }
 
     @Override
     void setSource(Object source) {
