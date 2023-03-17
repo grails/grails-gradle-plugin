@@ -4,7 +4,7 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
+        classpath "io.github.gradle-nexus:publish-plugin:1.3.0"
         classpath "com.bmuschko:gradle-nexus-plugin:2.3.1"
     }
 }
@@ -89,7 +89,7 @@ dependencies {
     documentation "org.codehaus.groovy:groovy-cli-picocli:$groovyVersion"
 
     api gradleApi()
-    api "io.github.gradle-nexus:publish-plugin:1.1.0"
+    api "io.github.gradle-nexus:publish-plugin:1.3.0"
     api "com.bmuschko:gradle-nexus-plugin:2.3.1"
     api "org.grails:grails-gradle-model:$grailsVersion"
     api "org.grails:grails-shell:$grailsVersion", {
