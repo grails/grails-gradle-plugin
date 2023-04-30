@@ -4,7 +4,7 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath "io.github.gradle-nexus:publish-plugin:1.1.0"
+        classpath "io.github.gradle-nexus:publish-plugin:1.3.0"
         classpath "com.bmuschko:gradle-nexus-plugin:2.3.1"
     }
 }
@@ -59,7 +59,6 @@ ext.pomInfo = {
 apply plugin: 'idea'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'groovy'
-apply plugin: 'com.bmuschko.nexus'
 apply plugin: 'maven-publish'
 
 if (isReleaseVersion) {
@@ -67,11 +66,23 @@ if (isReleaseVersion) {
     apply plugin: 'signing'
 }
 
-sourceCompatibility = "1.8"
-targetCompatibility = "1.8"
+sourceCompatibility = "1.11"
+targetCompatibility = "1.11"
 
 configurations {
     documentation
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+configurations {
+    all {
+        resolutionStrategy.force 'org.codehaus.groovy:groovy-xml:3.0.13'
+        resolutionStrategy.force 'org.yaml:snakeyaml:1.33'
+    }
 }
 
 dependencies {
@@ -79,7 +90,7 @@ dependencies {
     documentation "org.codehaus.groovy:groovy-cli-picocli:$groovyVersion"
 
     api gradleApi()
-    api "io.github.gradle-nexus:publish-plugin:1.1.0"
+    api "io.github.gradle-nexus:publish-plugin:1.3.0"
     api "com.bmuschko:gradle-nexus-plugin:2.3.1"
     api "org.grails:grails-gradle-model:$grailsVersion"
     api "org.grails:grails-shell:$grailsVersion", {
@@ -191,17 +202,25 @@ configure([javadoc]) {
     options.jFlags "-Xms64M", "-Xmx512M"
 }
 
-afterEvaluate {
-    signing {
-        required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
-        Publication[] publications = new Publication[publishing.publications.size()]
-        publishing.publications.findAll().toArray(publications)
-        sign(publications)
+tasks.withType(Copy) {
+    configure {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
 }
 
-tasks.withType(Sign) {
-    onlyIf { isReleaseVersion }
+if (isReleaseVersion) {
+    afterEvaluate {
+        signing {
+            required { isReleaseVersion && gradle.taskGraph.hasTask("publish") }
+            Publication[] publications = new Publication[publishing.publications.size()]
+            publishing.publications.findAll().toArray(publications)
+            sign(publications)
+        }
+    }
+
+    tasks.withType(Sign) {
+        onlyIf { isReleaseVersion }
+    }
 }
 
 tasks.withType(io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository).configureEach {
@@ -221,14 +240,6 @@ if (isReleaseVersion) {
                 stagingProfileId = ossStagingProfileId
             }
         }
-    }
-}
-
-modifyPom {
-    delegate.project {
-        def updatePom = pomInfo.clone()
-        updatePom.delegate = delegate
-        updatePom()
     }
 }
 
@@ -252,16 +263,38 @@ publishing {
             pom {
                 name = "Grails Gradle Plugin"
                 description = "A Gradle plugin for Grails which provides a bunch of useful plugins"
-            }
-            afterEvaluate {
-                artifact source: sourcesJar, classifier: "sources"
-                artifact source: javadocJar, classifier: "javadoc"
-            }
-            pom.withXml {
-                def xml = asNode()
-                xml.children().last() + pomInfo
-            }
 
+                url = 'https://github.com/grails/grails-gradle-plugin'
+
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+
+                scm {
+                    url = "scm:git@github.com:grails/grails-gradle-plugin.git"
+                    connection = "scm:git@github.com:grails/grails-gradle-plugin.git"
+                    developerConnection = "scm:git@github.com:grails/grails-gradle-plugin.git"
+                }
+
+                developers {
+                    developer {
+                        id = 'graemerocher'
+                        name = 'Graeme Rocher'
+                    }
+                    developer {
+                        id = 'jeffscottbrown'
+                        name = 'Jeff Brown'
+                    }
+                    developer {
+                        id = 'puneetbehl'
+                        name = 'Puneet Behl'
+                    }
+                }
+            }
         }
     }
 }
