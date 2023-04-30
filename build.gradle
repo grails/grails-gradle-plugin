@@ -80,7 +80,7 @@ java {
 
 configurations {
     all {
-        resolutionStrategy.force 'org.codehaus.groovy:groovy-xml:3.0.13'
+        resolutionStrategy.force 'org.codehaus.groovy:groovy-xml:3.0.17'
         resolutionStrategy.force 'org.yaml:snakeyaml:1.33'
     }
 }
