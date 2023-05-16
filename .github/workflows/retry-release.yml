@@ -1,0 +1,78 @@
+name: Retry Release
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: The Grails Release (e.g. 5.0.3)
+        required: true
+      target_branch:
+        description: The Target Branch (e.g. 5.0.x)
+        required: true
+permissions: {}
+jobs:
+  release:
+    permissions:
+      contents: write  #  to create release
+      issues: read  #  to get closed issues
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['11']
+    env:
+      GIT_USER_NAME: puneetbehl
+      GIT_USER_EMAIL: behlp@objectcomputing.com
+      GRADLE_OPTS: -Xmx1500m -Dfile.encoding=UTF-8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: "v${{ github.event.inputs.release }}"
+          token: ${{ secrets.GH_TOKEN }}
+      - uses: gradle/wrapper-validation-action@v1
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'adopt'
+          java-version: ${{ matrix.java }}
+      - name: Extract Target Branch
+        id: extract_branch
+        run: |
+          echo $TARGET_BRANCH
+          echo ::set-output name=value::${TARGET_BRANCH}
+        env:
+          TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
+      - name: Set the current release version
+        id: release_version
+        run: echo ::set-output name=release_version::${VERSION}
+        env:
+          VERSION: ${{ github.event.inputs.release }}
+      - name: Run Assemble
+        id: assemble
+        uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629 # v2
+        with:
+          arguments: assemble
+      - name: Publish to Github Pages
+        id: docs
+        if: steps.assemble.outcome == 'success'
+        uses: micronaut-projects/github-pages-deploy-action@grails
+        env:
+          BETA: ${{ contains(steps.release_version.outputs.release_version, 'M') || contains(steps.release_version.outputs.release_version, 'RC') }}
+          SKIP_SNAPSHOT: ${{ startsWith(steps.extract_branch.outputs.value, '3.3') || startsWith(steps.extract_branch.outputs.value, '4.1') || startsWith(steps.extract_branch.outputs.value, '6.0') }}
+          TARGET_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: build/docs
+          DOC_FOLDER: gh-pages
+          COMMIT_EMAIL: behlp@objectcomputing.com
+          COMMIT_NAME: Puneet Behl
+          VERSION: ${{ steps.release_version.outputs.release_version }}
+      - name: Run post-release
+        if: steps.assemble.outcome == 'success'
+        uses: ./.github/actions/post-release
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          SNAPSHOT_SUFFIX: -SNAPSHOT
+          TARGET_BRANCH: ${{ github.event.inputs.target_branch }}
+          RELEASE_VERSION: ${{ github.event.inputs.release }}

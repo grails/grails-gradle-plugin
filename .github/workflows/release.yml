@@ -64,9 +64,10 @@ jobs:
       - name: Publish to Github Pages
         id: docs
         if: steps.assemble.outcome == 'success'
-        uses: micronaut-projects/github-pages-deploy-action@master
+        uses: micronaut-projects/github-pages-deploy-action@grails
         env:
           BETA: ${{ contains(steps.release_version.outputs.release_version, 'M') || contains(steps.release_version.outputs.release_version, 'RC') }}
+          SKIP_SNAPSHOT: ${{ startsWith(steps.extract_branch.outputs.value, '3.3') || startsWith(steps.extract_branch.outputs.value, '4.1') || startsWith(steps.extract_branch.outputs.value, '6.0') }}
           TARGET_REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           BRANCH: gh-pages
