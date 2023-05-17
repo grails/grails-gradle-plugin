@@ -73,7 +73,7 @@ jobs:
           VERSION: ${{ steps.release_version.outputs.release_version }}
       - name: Run post-release
         if: steps.groovydoc.outcome == 'success'
-        uses: ./.github/actions/post-release
+        uses: micronaut-projects/github-actions/post-release@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
