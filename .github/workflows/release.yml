@@ -49,8 +49,8 @@ jobs:
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }}           
         with:
           arguments: -Psigning.secretKeyRingFile=${{ github.workspace }}/secring.gpg publishToSonatype closeAndReleaseSonatypeStagingRepository
-      - name: Run Assemble
-        id: assemble
+      - name: Generate Groovydoc
+        id: groovydoc
         if: steps.publish.outcome == 'success'
         uses: gradle/gradle-build-action@v2
         env:
@@ -58,12 +58,12 @@ jobs:
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER }}
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }}         
         with:
-          arguments: assemble
+          arguments: groovydoc
       - name: Export Gradle Properties
         uses: micronaut-projects/github-actions/export-gradle-properties@master
       - name: Publish to Github Pages
         id: docs
-        if: steps.assemble.outcome == 'success'
+        if: steps.groovydoc.outcome == 'success'
         uses: micronaut-projects/github-pages-deploy-action@grails
         env:
           BETA: ${{ contains(steps.release_version.outputs.release_version, 'M') || contains(steps.release_version.outputs.release_version, 'RC') }}

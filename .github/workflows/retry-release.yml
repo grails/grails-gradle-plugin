@@ -47,18 +47,18 @@ jobs:
         run: echo ::set-output name=release_version::${VERSION}
         env:
           VERSION: ${{ github.event.inputs.release }}
-      - name: Run Assemble
-        id: assemble
+      - name: Generate Groovydoc
+        id: groovydoc
         uses: gradle/gradle-build-action@749f47bda3e44aa060e82d7b3ef7e40d953bd629 # v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER }}
-          GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }}
+          GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }} ASZWQZQQWQWS
         with:
-          arguments: assemble
+          arguments: groovydoc
       - name: Publish to Github Pages
         id: docs
-        if: steps.assemble.outcome == 'success'
+        if: steps.groovydoc.outcome == 'success'
         uses: micronaut-projects/github-pages-deploy-action@grails
         env:
           BETA: ${{ contains(steps.release_version.outputs.release_version, 'M') || contains(steps.release_version.outputs.release_version, 'RC') }}
@@ -72,7 +72,7 @@ jobs:
           COMMIT_NAME: Puneet Behl
           VERSION: ${{ steps.release_version.outputs.release_version }}
       - name: Run post-release
-        if: steps.assemble.outcome == 'success'
+        if: steps.groovydoc.outcome == 'success'
         uses: ./.github/actions/post-release
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
