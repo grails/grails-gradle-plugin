@@ -1,0 +1,14 @@
+org.grails.gradle.plugin.agent
+org.grails.gradle.plugin.commands
+org.grails.gradle.plugin.core
+org.grails.gradle.plugin.doc
+org.grails.gradle.plugin.model
+org.grails.gradle.plugin.profiles
+org.grails.gradle.plugin.profiles.internal
+org.grails.gradle.plugin.profiles.tasks
+org.grails.gradle.plugin.publishing.internal
+org.grails.gradle.plugin.run
+org.grails.gradle.plugin.util
+org.grails.gradle.plugin.watch
+org.grails.gradle.plugin.web
+org.grails.gradle.plugin.web.gsp
