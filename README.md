@@ -7,9 +7,9 @@ Below are the plugins that are provided by the grails-gradle-plugin dependency.
 
 ```
 buildscript {
-	dependencies {
-		classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-	}
+    dependencies {
+        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+    }
 }
 ```
 
