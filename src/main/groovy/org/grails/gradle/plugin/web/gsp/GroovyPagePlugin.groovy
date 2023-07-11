@@ -2,22 +2,17 @@ package org.grails.gradle.plugin.web.gsp
 
 import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetOutput
-import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.bundling.War
-import org.gradle.api.tasks.compile.GroovyCompile
-import org.gradle.language.jvm.tasks.ProcessResources
-import org.grails.gradle.plugin.util.SourceSets
 import org.grails.gradle.plugin.core.GrailsExtension
-import org.apache.tools.ant.taskdefs.condition.Os
+import org.grails.gradle.plugin.util.SourceSets
 
 /**
  * A plugin that adds support for compiling Groovy Server Pages (GSP)
@@ -55,7 +50,7 @@ class GroovyPagePlugin implements Plugin<Project> {
         def allTasks = project.tasks
 
         def compileGroovyPages = allTasks.create("compileGroovyPages", GroovyPageForkCompileTask) {
-            destinationDir = destDir
+            destinationDirectory = destDir
             tmpDirPath = getTmpDirPath(project)
             source = project.file("${project.projectDir}/grails-app/views")
             serverpath = "/WEB-INF/grails-app/views/"
@@ -64,7 +59,7 @@ class GroovyPagePlugin implements Plugin<Project> {
         compileGroovyPages.setClasspath( allClasspath )
 
         def compileWebappGroovyPages = allTasks.create("compileWebappGroovyPages", GroovyPageForkCompileTask) {
-            destinationDir = destDir
+            destinationDirectory = destDir
             source = project.file("${project.projectDir}/src/main/webapp")
             tmpDirPath = getTmpDirPath(project)
             serverpath = "/"
@@ -89,22 +84,30 @@ class GroovyPagePlugin implements Plugin<Project> {
         compileGroovyPages.dependsOn( allTasks.findByName("classes") )
         compileGroovyPages.dependsOn( compileWebappGroovyPages )
 
-        allTasks.withType(War) { War war ->
-            war.dependsOn compileGroovyPages
+        allTasks.withType(War).configureEach { War war ->
+
+            if (war.name == 'bootWar') {
+                war.from(destDir) {
+                    into("WEB-INF/classes")
+                }
+            } else if (war.name == 'war') {
+                war.from destDir
+            }
+
             if (war.classpath) {
                 war.classpath = war.classpath + project.files(destDir)
             } else {
                 war.classpath = project.files(destDir)
             }
         }
-        allTasks.withType(Jar) { Jar jar ->
+        allTasks.withType(Jar).configureEach { Jar jar ->
             if(!(jar instanceof War)) {
                 if (jar.name == 'bootJar') {
                     jar.dependsOn compileGroovyPages
                     jar.from(destDir) {
                         into("BOOT-INF/classes")
                     }
-                } else if(jar.name == 'jar') {
+                } else if (jar.name == 'jar') {
                     jar.dependsOn compileGroovyPages
                     jar.from destDir
                 }
