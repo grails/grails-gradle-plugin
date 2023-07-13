@@ -4,15 +4,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.gradle.api.Action
 import org.gradle.api.file.FileTree
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
-import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.LocalState
-import org.gradle.api.tasks.Nested
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.process.ExecResult
@@ -96,7 +88,7 @@ class GroovyPageForkCompileTask extends AbstractCompile {
                     @Override
                     @CompileDynamic
                     void execute(JavaExecSpec javaExecSpec) {
-                        javaExecSpec.setMain(getCompilerName())
+                        javaExecSpec.mainClass.set(getCompilerName())
                         javaExecSpec.setClasspath(getClasspath())
 
                         def jvmArgs = compileOptions.forkOptions.jvmArgs

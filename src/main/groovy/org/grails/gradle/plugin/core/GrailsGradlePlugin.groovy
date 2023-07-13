@@ -467,7 +467,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
     protected JavaExec createConsoleTask(Project project, TaskContainer tasks, Configuration configuration) {
         tasks.create("console", JavaExec) {
             classpath = project.sourceSets.main.runtimeClasspath + configuration
-            main = "grails.ui.console.GrailsSwingConsole"
+            mainClass.set("grails.ui.console.GrailsSwingConsole")
         }
     }
 
@@ -475,7 +475,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
     protected JavaExec createShellTask(Project project, TaskContainer tasks, Configuration configuration) {
         tasks.create("shell", JavaExec) {
             classpath = project.sourceSets.main.runtimeClasspath + configuration
-            main = "grails.ui.shell.GrailsShell"
+            mainClass.set("grails.ui.shell.GrailsShell")
             standardInput = System.in
         }
     }
@@ -584,7 +584,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
     protected Jar createPathingJarTask(Project project, String name, Configuration...configurations) {
         project.tasks.create(name, Jar) { Jar task ->
             task.dependsOn(configurations)
-            task.appendix = 'pathing'
+            task.archiveAppendix.set('pathing')
 
             Set files = []
             configurations.each {

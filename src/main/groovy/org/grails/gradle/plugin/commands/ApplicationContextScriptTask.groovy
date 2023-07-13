@@ -7,7 +7,7 @@ import org.gradle.api.tasks.JavaExec
 class ApplicationContextScriptTask extends JavaExec {
 
     ApplicationContextScriptTask() {
-        setMain("grails.ui.script.GrailsApplicationScriptRunner")
+        mainClass.set("grails.ui.script.GrailsApplicationScriptRunner")
         dependsOn("classes", "findMainClass")
         systemProperties(System.properties.findAll { it.key.toString().startsWith('grails.') } as Map<String, Object>)
     }

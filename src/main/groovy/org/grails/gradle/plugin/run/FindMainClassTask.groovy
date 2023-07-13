@@ -31,7 +31,7 @@ class FindMainClassTask extends DefaultTask {
         if ( bootRun != null ) {
             String mainClass = findMainClass()
             if(mainClass != null) {
-                bootRun.setMain(mainClass)
+                bootRun.mainClass.set(mainClass)
                 ExtraPropertiesExtension extraProperties = (ExtraPropertiesExtension) getProject()
                         .getExtensions().getByName("ext")
                 extraProperties.set("mainClassName", mainClass)
