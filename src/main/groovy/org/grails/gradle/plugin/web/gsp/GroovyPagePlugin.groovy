@@ -85,7 +85,7 @@ class GroovyPagePlugin implements Plugin<Project> {
         compileGroovyPages.dependsOn( compileWebappGroovyPages )
 
         allTasks.withType(War).configureEach { War war ->
-
+            war.dependsOn compileGroovyPages
             if (war.name == 'bootWar') {
                 war.from(destDir) {
                     into("WEB-INF/classes")
