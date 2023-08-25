@@ -403,8 +403,9 @@ class GrailsGradlePlugin extends GroovyPlugin {
                     task.systemProperty(sysPropName, value.toString())
                 }
             }
+
             task.systemProperty Metadata.APPLICATION_NAME, project.name
-            task.systemProperty Metadata.APPLICATION_VERSION, project.version
+            task.systemProperty Metadata.APPLICATION_VERSION, (project.version instanceof Serializable ? project.version : project.version.toString())
             task.systemProperty Metadata.APPLICATION_GRAILS_VERSION, grailsVersion
             task.systemProperty Environment.KEY, defaultGrailsEnv
             task.systemProperty Environment.FULL_STACKTRACE, System.getProperty(Environment.FULL_STACKTRACE) ?: ""
@@ -414,8 +415,6 @@ class GrailsGradlePlugin extends GroovyPlugin {
             if(task.maxHeapSize == null) {
                 task.maxHeapSize = "768m"
             }
-            List<String> jvmArgs = task.jvmArgs
-
             task.jvmArgs "-XX:+TieredCompilation", "-XX:TieredStopAtLevel=1", "-XX:CICompilerCount=3"
 
             // Copy GRAILS_FORK_OPTS into the fork. Or use GRAILS_OPTS if no fork options provided
