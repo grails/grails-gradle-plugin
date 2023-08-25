@@ -22,6 +22,7 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestReport
@@ -46,9 +47,11 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
         if (sourceDirs) {
             List<File> acceptedSourceDirs = []
             final SourceSetContainer sourceSets = SourceSets.findSourceSets(project)
+            final SourceSetOutput mainSourceSetOutput = SourceSets.findMainSourceSet(project).output
+            final SourceSetOutput testSourceSetOutput = SourceSets.findSourceSet(project, "test").output
             SourceSet integrationTest = sourceSets.create("integrationTest")
-            integrationTest.compileClasspath += SourceSets.findMainSourceSet(project).output
-            integrationTest.runtimeClasspath += SourceSets.findMainSourceSet(project).output
+            integrationTest.compileClasspath += mainSourceSetOutput + testSourceSetOutput
+            integrationTest.runtimeClasspath += mainSourceSetOutput + testSourceSetOutput
 
             for (File srcDir in sourceDirs) {
                 registerSourceDir(integrationTest, srcDir)
@@ -67,10 +70,11 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
 
             TaskContainer tasks = project.tasks
             def integrationTestTask = tasks.register('integrationTest', Test) {
+                it.dependsOn("test")
                 it.group = LifecycleBasePlugin.VERIFICATION_GROUP
                 it.testClassesDirs = integrationTest.output.classesDirs
                 it.classpath = integrationTest.runtimeClasspath
-                it.shouldRunAfter(tasks.named("test").get())
+                it.shouldRunAfter("test")
                 it.finalizedBy("mergeTestReports")
                 it.reports.html.required.set(false)
                 it.maxParallelForks = 1
@@ -108,7 +112,7 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
 
     @CompileDynamic
     private integrateIdea(Project project, File[] acceptedSourceDirs) {
-        project.pluginManager.withPlugin('idea' ) { ->
+        project.pluginManager.withPlugin('idea') { ->
             project.idea {
                 module {
                     testSourceDirs += acceptedSourceDirs
@@ -118,6 +122,6 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
     }
 
     File[] findIntegrationTestSources(Project project) {
-        project.file(sourceFolderName).listFiles({File file-> file.isDirectory() && !file.name.contains('.')} as FileFilter)
+        project.file(sourceFolderName).listFiles({ File file -> file.isDirectory() && !file.name.contains('.') } as FileFilter)
     }
 }
