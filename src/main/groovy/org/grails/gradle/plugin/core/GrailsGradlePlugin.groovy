@@ -60,7 +60,6 @@ import org.grails.gradle.plugin.util.SourceSets
 import org.grails.io.support.FactoriesLoaderSupport
 import org.springframework.boot.gradle.dsl.SpringBootExtension
 import org.springframework.boot.gradle.plugin.SpringBootPlugin
-import org.springframework.boot.gradle.tasks.bundling.BootArchive
 
 import javax.inject.Inject
 
@@ -135,7 +134,9 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
         configureApplicationCommands(project)
 
-        createBuildPropertiesTask(project)
+        project.gradle.projectsEvaluated {
+            createBuildPropertiesTask(project)
+        }
 
         configureRunScript(project)
 
@@ -227,10 +228,8 @@ class GrailsGradlePlugin extends GroovyPlugin {
                 }
             }
 
-            project.afterEvaluate {
-                TaskContainer tasks = project.tasks
-                tasks.findByName("processResources")?.dependsOn(buildPropertiesTask)
-            }
+            TaskContainer tasks = project.tasks
+            tasks.findByName("processResources")?.dependsOn(buildPropertiesTask)
         }
     }
 
