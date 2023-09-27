@@ -135,7 +135,9 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
         configureApplicationCommands(project)
 
-        createBuildPropertiesTask(project)
+        project.gradle.projectsEvaluated {
+            createBuildPropertiesTask(project)
+        }
 
         configureRunScript(project)
 
@@ -227,10 +229,8 @@ class GrailsGradlePlugin extends GroovyPlugin {
                 }
             }
 
-            project.afterEvaluate {
-                TaskContainer tasks = project.tasks
-                tasks.findByName("processResources")?.dependsOn(buildPropertiesTask)
-            }
+            TaskContainer tasks = project.tasks
+            tasks.findByName("processResources")?.dependsOn(buildPropertiesTask)
         }
     }
 

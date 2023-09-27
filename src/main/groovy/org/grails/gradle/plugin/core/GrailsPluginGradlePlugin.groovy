@@ -63,7 +63,9 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
 
         configureAstSources(project)
 
-        configureProjectNameAndVersionASTMetadata(project)
+        project.gradle.projectsEvaluated {
+            configureProjectNameAndVersionASTMetadata(project)
+        }
 
         configurePluginResources(project)
 
