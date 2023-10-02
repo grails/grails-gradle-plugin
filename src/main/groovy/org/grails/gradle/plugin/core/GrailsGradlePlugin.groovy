@@ -146,9 +146,16 @@ class GrailsGradlePlugin extends GroovyPlugin {
     }
 
     protected void excludeDependencies(Project project) {
-        project.configurations.all ({ Configuration configuration ->
-            configuration.exclude group:"org.slf4j", module: "slf4j-simple"
-        })
+        // Perhaps change to check that if this is a Grails plugin, don't exclude?
+        // Adding an exclusion to every dependency in a pom is very verbose and
+        // greatly increases the size of the pom. 
+        // It would be nice to have documented in a comment why this global exclude is in here
+        String slf4jPreventExclusion = project.properties['slf4jPreventExclusion']
+        if (!slf4jPreventExclusion || slf4jPreventExclusion != 'true') {
+            project.configurations.all ({ Configuration configuration ->
+                configuration.exclude group:"org.slf4j", module: "slf4j-simple"
+            })
+        }
     }
 
     protected void configureProfile(Project project) {
