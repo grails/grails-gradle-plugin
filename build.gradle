@@ -86,7 +86,7 @@ configurations {
 }
 
 dependencies {
-    documentation "org.fusesource.jansi:jansi:2.4.0"
+    documentation "org.fusesource.jansi:jansi:2.4.1"
     documentation "org.codehaus.groovy:groovy-cli-picocli:$groovyVersion"
 
     api gradleApi()
