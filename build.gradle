@@ -310,3 +310,7 @@ project.afterEvaluate {
     }
 }
 
+tasks.named("build").configure {
+    finalizedBy("groovydoc")
+}
+
