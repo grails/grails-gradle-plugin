@@ -244,13 +244,14 @@ BINTRAY_KEY=key
 
                             }
 
-                            // simply remove dependencies without a version
-                            // version-less dependencies are handled with dependencyManagement
+                            // fix dependencies without a version
+                            // resolve versions via global dependency management
                             // see https://github.com/spring-gradle-plugins/dependency-management-plugin/issues/8 for more complete solutions
+                            final versions = project.dependencyManagement.dependencyManagementContainer.globalDependencyManagement.versions
                             pomNode.dependencies.dependency.findAll {
                                 it.version.text().isEmpty()
                             }.each {
-                                it.replaceNode {}
+                                it.appendNode('version', versions["${it.groupId.text()}:${it.artifactId.text()}"])
                             }
                         }
                     }
