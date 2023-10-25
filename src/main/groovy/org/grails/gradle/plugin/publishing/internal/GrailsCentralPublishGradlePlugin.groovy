@@ -27,6 +27,7 @@ import org.gradle.api.plugins.PluginManager
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.plugins.signing.Sign
 import org.gradle.plugins.signing.SigningExtension
 import org.gradle.plugins.signing.SigningPlugin
@@ -116,6 +117,11 @@ BINTRAY_KEY=key
             boolean isRelease = !isSnapshot
             final PluginManager pluginManager = project.getPluginManager()
             pluginManager.apply(MavenPublishPlugin.class)
+
+            // Remove "plain" archive classifier, unless bootJar or bootWar are enabled
+            if (!taskContainer.findByName("bootJar")?.enabled && !taskContainer.findByName("bootWar")?.enabled) {
+                (taskContainer.findByName("jar") as Jar).archiveClassifier.set("")
+            }
 
             project.publishing {
                 if (isSnapshot) {
