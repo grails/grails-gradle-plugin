@@ -20,6 +20,7 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.SourceSetOutput
@@ -61,6 +62,9 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
             final File resources = new File(project.projectDir, "grails-app/conf")
             integrationTest.resources.srcDir(resources)
 
+            final DependencyHandler dependencies = project.dependencies
+            dependencies.add("integrationTestImplementation", mainSourceSetOutput)
+            dependencies.add("integrationTestImplementation", testSourceSetOutput)
             project.configurations.named("integrationTestImplementation") {
                 it.extendsFrom(project.configurations.named("testImplementation").get())
             }
