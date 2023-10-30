@@ -20,15 +20,22 @@ import groovy.transform.CompileDynamic
 import groovy.transform.CompileStatic
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.dsl.DependencyHandler
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestReport
 import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.grails.gradle.plugin.util.SourceSets
+
+import static org.gradle.api.plugins.JavaPlugin.TEST_IMPLEMENTATION_CONFIGURATION_NAME
+import static org.gradle.api.plugins.JavaPlugin.TEST_RUNTIME_ONLY_CONFIGURATION_NAME
+import static org.gradle.api.plugins.JavaPlugin.TEST_TASK_NAME
+import static org.gradle.api.tasks.SourceSet.TEST_SOURCE_SET_NAME
 
 /**
  * Gradle plugin for adding separate src/integration-test folder to hold integration tests
@@ -39,6 +46,13 @@ import org.grails.gradle.plugin.util.SourceSets
  */
 @CompileStatic
 class IntegrationTestGradlePlugin implements Plugin<Project> {
+
+    static final String INTEGRATION_TEST_IMPLEMENTATION_CONFIGURATION_NAME = "integrationTestImplementation"
+    static final String INTEGRATION_TEST_RUNTIME_ONLY_CONFIGURATION_NAME = "integrationTestRuntimeOnly"
+    static final String INTEGRATION_TEST_SOURCE_SET_NAME = "integrationTest"
+    static final String INTEGRATION_TEST_TASK_NAME = "integrationTest"
+    static final String MERGE_TEST_REPORTS_TASK_NAME = "mergeTestReports"
+
     boolean ideaIntegration = true
     String sourceFolderName = "src/integration-test"
 
@@ -49,8 +63,8 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
             List<File> acceptedSourceDirs = []
             final SourceSetContainer sourceSets = SourceSets.findSourceSets(project)
             final SourceSetOutput mainSourceSetOutput = SourceSets.findMainSourceSet(project).output
-            final SourceSetOutput testSourceSetOutput = SourceSets.findSourceSet(project, "test").output
-            SourceSet integrationTest = sourceSets.create("integrationTest")
+            final SourceSetOutput testSourceSetOutput = SourceSets.findSourceSet(project, TEST_SOURCE_SET_NAME).output
+            final SourceSet integrationTest = sourceSets.create(INTEGRATION_TEST_SOURCE_SET_NAME)
             integrationTest.compileClasspath += mainSourceSetOutput + testSourceSetOutput
             integrationTest.runtimeClasspath += mainSourceSetOutput + testSourceSetOutput
 
@@ -63,22 +77,24 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
             integrationTest.resources.srcDir(resources)
 
             final DependencyHandler dependencies = project.dependencies
-            dependencies.add("integrationTestImplementation", mainSourceSetOutput)
-            dependencies.add("integrationTestImplementation", testSourceSetOutput)
-            project.configurations.named("integrationTestImplementation") {
-                it.extendsFrom(project.configurations.named("testImplementation").get())
+            dependencies.add(INTEGRATION_TEST_IMPLEMENTATION_CONFIGURATION_NAME, mainSourceSetOutput)
+            dependencies.add(INTEGRATION_TEST_IMPLEMENTATION_CONFIGURATION_NAME, testSourceSetOutput)
+
+            final ConfigurationContainer configurations = project.configurations
+            configurations.named(INTEGRATION_TEST_IMPLEMENTATION_CONFIGURATION_NAME) {
+                it.extendsFrom(configurations.named(TEST_IMPLEMENTATION_CONFIGURATION_NAME).get())
             }
-            project.configurations.named("integrationTestRuntimeOnly") {
-                it.extendsFrom(project.configurations.named("testRuntimeOnly").get())
+            configurations.named(INTEGRATION_TEST_RUNTIME_ONLY_CONFIGURATION_NAME) {
+                it.extendsFrom(configurations.named(TEST_RUNTIME_ONLY_CONFIGURATION_NAME).get())
             }
 
-            TaskContainer tasks = project.tasks
-            def integrationTestTask = tasks.register('integrationTest', Test) {
+            final TaskContainer tasks = project.tasks
+            final TaskProvider<Test> integrationTestTask = tasks.register(INTEGRATION_TEST_TASK_NAME, Test) {
                 it.group = LifecycleBasePlugin.VERIFICATION_GROUP
                 it.testClassesDirs = integrationTest.output.classesDirs
                 it.classpath = integrationTest.runtimeClasspath
-                it.shouldRunAfter("test")
-                it.finalizedBy("mergeTestReports")
+                it.shouldRunAfter(TEST_TASK_NAME)
+                it.finalizedBy(MERGE_TEST_REPORTS_TASK_NAME)
                 it.reports.html.required.set(false)
                 it.maxParallelForks = 1
                 it.testLogging {
@@ -89,7 +105,7 @@ class IntegrationTestGradlePlugin implements Plugin<Project> {
                 it.dependsOn(integrationTestTask)
             }
 
-            tasks.register("mergeTestReports", TestReport) {
+            tasks.register(MERGE_TEST_REPORTS_TASK_NAME, TestReport) {
                 it.mustRunAfter(tasks.withType(Test).toArray())
                 it.destinationDirectory.set(project.layout.buildDirectory.dir("reports/tests"))
                 // These must point to the binary test results directory generated by a Test task instance.
