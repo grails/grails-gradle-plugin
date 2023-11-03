@@ -6,6 +6,7 @@ import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetOutput
@@ -86,6 +87,7 @@ class GroovyPagePlugin implements Plugin<Project> {
 
         allTasks.withType(War).configureEach { War war ->
             war.dependsOn compileGroovyPages
+            war.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
             if (war.name == 'bootWar') {
                 war.from(destDir) {
                     into("WEB-INF/classes")
@@ -101,14 +103,14 @@ class GroovyPagePlugin implements Plugin<Project> {
             }
         }
         allTasks.withType(Jar).configureEach { Jar jar ->
+            jar.dependsOn compileGroovyPages
+            jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
             if(!(jar instanceof War)) {
                 if (jar.name == 'bootJar') {
-                    jar.dependsOn compileGroovyPages
                     jar.from(destDir) {
                         into("BOOT-INF/classes")
                     }
                 } else if (jar.name == 'jar') {
-                    jar.dependsOn compileGroovyPages
                     jar.from destDir
                 }
             }
