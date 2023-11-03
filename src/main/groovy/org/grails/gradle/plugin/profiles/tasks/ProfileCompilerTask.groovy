@@ -37,6 +37,7 @@ import org.grails.cli.profile.commands.script.GroovyScriptCommand
 import org.grails.cli.profile.commands.script.GroovyScriptCommandTransform
 import org.grails.gradle.plugin.profiles.GrailsProfileGradlePlugin
 import org.yaml.snakeyaml.DumperOptions
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
 import org.yaml.snakeyaml.constructor.SafeConstructor
 import org.yaml.snakeyaml.representer.Representer
@@ -91,7 +92,7 @@ class ProfileCompilerTask extends AbstractCompile {
 
         def options = new DumperOptions()
         options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK)
-        def yaml = new Yaml(new SafeConstructor(), new Representer(), options)
+        def yaml = new Yaml(new SafeConstructor(new LoaderOptions()), new Representer(options), options)
         Map<String, Object> profileData
         if (profileYmlExists) {
             profileData = (Map<String, Object>) config.withReader { BufferedReader r ->
