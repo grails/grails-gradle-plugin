@@ -304,7 +304,7 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
     @CompileStatic
     protected void configureFileWatch(Project project) {
-        def environment = Environment.current
+        def environment = Environment.getCurrent()
         enableFileWatch(environment, project)
     }
 
