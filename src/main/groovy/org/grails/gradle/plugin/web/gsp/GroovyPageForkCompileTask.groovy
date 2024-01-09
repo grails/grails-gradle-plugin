@@ -8,6 +8,7 @@ import org.gradle.api.tasks.*
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.process.ExecResult
 import org.gradle.process.JavaExecSpec
+import org.gradle.work.InputChanges
 
 import java.nio.file.Files
 import java.nio.file.Path
@@ -69,7 +70,7 @@ class GroovyPageForkCompileTask extends AbstractCompile {
     }
 
     @TaskAction
-    void execute() {
+    void execute(InputChanges inputs) {
         compile()
     }
 
