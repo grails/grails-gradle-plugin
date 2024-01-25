@@ -73,12 +73,16 @@ java {
 }
 
 configurations.configureEach {
+    // This is a workaround for grails-shell exposing a different version of Groovy
+    // than the one used by Gradle. This causes issues with the Groovy compiler.
     resolutionStrategy.force "org.codehaus.groovy:groovy-xml:$GroovySystem.version"
 }
 
 dependencies {
     implementation "io.github.gradle-nexus:publish-plugin:1.3.0"
     implementation "com.bmuschko:gradle-nexus-plugin:2.3.1"
+    implementation "org.grails:grails-bootstrap:$grailsVersion"
+    implementation "org.grails:grails-gradle-model:$grailsVersion"
     implementation "org.grails:grails-shell:$grailsVersion"
     implementation "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
     implementation "io.spring.gradle:dependency-management-plugin:1.1.4"
