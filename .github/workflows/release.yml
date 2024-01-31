@@ -132,7 +132,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'adopt'
-          java-version: ${{ matrix.java }}
+          java-version: '11'
       - name: Generate Groovydoc
         id: groovydoc
         uses: gradle/gradle-build-action@v2
@@ -155,5 +155,5 @@ jobs:
           FOLDER: build/docs
           DOC_FOLDER: gh-pages
           COMMIT_EMAIL: ${{ env.GIT_USER_EMAIL }}
-          COMMIT_NAME: ${{ env.GIT_USER_NAME }}
+          COMMIT_NAME: Puneet Behl
           VERSION: ${{ needs.publish.outputs.release_version }}
