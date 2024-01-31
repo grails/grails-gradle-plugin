@@ -15,7 +15,6 @@ jobs:
         java: ['11', '14', '17']
     env:
       WORKSPACE: ${{ github.workspace }}
-      GRADLE_OPTS: -Xmx1500m -Dfile.encoding=UTF-8
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK
@@ -53,9 +52,30 @@ jobs:
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_USER }}
           GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY: ${{ secrets.GRADLE_ENTERPRISE_BUILD_CACHE_NODE_KEY }}          
         with:
-          arguments: -Dorg.gradle.internal.publish.checksums.insecure=true publish
-      - name: Build Groovydoc
-        id: build
+          arguments: | 
+            -Dorg.gradle.internal.publish.checksums.insecure=true 
+            publish
+  docs:
+    if: github.event_name == 'push'
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GIT_USER_NAME: puneetbehl
+      GIT_USER_EMAIL: behlp@unityfoundation.io
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+      - name: Generate Groovydoc
+        id: groovydoc
         uses: gradle/gradle-build-action@v2
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
@@ -64,13 +84,16 @@ jobs:
         with:
           arguments: groovydoc
       - name: Publish to Github Pages
+        id: docs
         if: success()
         uses: grails/github-pages-deploy-action@v2
         env:
-          TARGET_REPOSITORY: ${{ steps.docs_target.outputs.value }}
+          SKIP_SNAPSHOT: ${{ contains(needs.publish.outputs.release_version, 'M') }}
+          TARGET_REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           BRANCH: gh-pages
           FOLDER: build/docs
           DOC_FOLDER: gh-pages
           COMMIT_EMAIL: behlp@unityfoundation.io
-          COMMIT_NAME: Puneet Behl          
+          COMMIT_NAME: Puneet Behl
+          VERSION: ${{ needs.publish.outputs.release_version }}
