@@ -659,10 +659,10 @@ class GrailsGradlePlugin extends GroovyPlugin {
                     pathingJar = createPathingJarTask(project, "pathingJar", runtime)
                 }
 
-                FileCollection pathingClasspath = project.files("${project.buildDir}/resources/main", "${project.projectDir}/gsp-classes", pathingJar.archivePath) + mainFiles
+                FileCollection pathingClasspath = project.files("${project.buildDir}/resources/main", "${project.projectDir}/gsp-classes", pathingJar.archiveFile) + mainFiles
 
                 Jar pathingJarCommand = createPathingJarTask(project, "pathingJarCommand", runtime, console)
-                FileCollection pathingClasspathCommand = project.files("${project.buildDir}/resources/main", "${project.projectDir}/gsp-classes", pathingJarCommand.archivePath) + mainFiles
+                FileCollection pathingClasspathCommand = project.files("${project.buildDir}/resources/main", "${project.projectDir}/gsp-classes", pathingJarCommand.archiveFile) + mainFiles
 
                 GrailsExtension grailsExt = project.extensions.getByType(GrailsExtension)
 

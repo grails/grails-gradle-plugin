@@ -73,7 +73,7 @@ class GroovyPagePlugin implements Plugin<Project> {
             GrailsExtension grailsExt = project.extensions.getByType(GrailsExtension)
             if (grailsExt.pathingJar && Os.isFamily(Os.FAMILY_WINDOWS)) {
                 Jar pathingJar = (Jar) allTasks.findByName('pathingJar')
-                allClasspath = project.files("${project.buildDir}/classes/groovy/main", "${project.buildDir}/resources/main", pathingJar.archivePath)
+                allClasspath = project.files("${project.buildDir}/classes/groovy/main", "${project.buildDir}/resources/main", pathingJar.archiveFile)
                 compileGroovyPages.dependsOn(pathingJar)
                 compileGroovyPages.setClasspath(allClasspath)
                 compileWebappGroovyPages.dependsOn(pathingJar)
