@@ -26,7 +26,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileVisitDetails
 import org.gradle.api.tasks.*
 import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.work.InputChanges
 import org.grails.cli.profile.commands.script.GroovyScriptCommand
 import org.grails.cli.profile.commands.script.GroovyScriptCommandTransform
 import org.grails.gradle.plugin.profiles.GrailsProfileGradlePlugin
@@ -79,7 +78,7 @@ class ProfileCompilerTask extends AbstractCompile {
     }
 
     @TaskAction
-    void execute(InputChanges inputChanges) {
+    void execute() {
 
         boolean profileYmlExists = config?.exists()
 

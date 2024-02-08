@@ -22,7 +22,6 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.compile.AbstractCompile
-import org.gradle.work.InputChanges
 
 /**
  * A task used to publish the user guide if a publin that is in GDoc format
@@ -67,7 +66,7 @@ class PublishGuideTask extends AbstractCompile {
 
     @CompileDynamic
     @TaskAction
-    void compile(InputChanges inputChanges) {
+    void compile() {
         def urls = getClasspath().files.collect() { File f -> f.toURI().toURL() }
 
         URLClassLoader classLoader = new URLClassLoader(urls as URL[], (ClassLoader) null)
