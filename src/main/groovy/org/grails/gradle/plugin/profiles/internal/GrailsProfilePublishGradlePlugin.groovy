@@ -49,7 +49,7 @@ class GrailsProfilePublishGradlePlugin extends GrailsCentralPublishGradlePlugin 
         project.tasks.create("javadocJar", Jar, (Action) { Jar jar ->
             jar.from(tempReadmeForJavadoc)
             jar.archiveClassifier.set("javadoc")
-            jar.destinationDir = new File(project.buildDir, "libs")
+            jar.destinationDirectory.set(new File(project.buildDir, "libs"))
             jar.setDescription("Assembles a jar archive containing the profile javadoc.")
             jar.setGroup(BUILD_GROUP)
         })
