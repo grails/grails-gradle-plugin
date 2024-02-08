@@ -120,7 +120,7 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         def taskContainer = project.tasks
         if(taskContainer.findByName('sourcesJar') == null) {
             def jarTask = taskContainer.create("sourcesJar", Jar)
-            jarTask.classifier = 'sources'
+            jarTask.archiveClassifier.set('sources')
             jarTask.from SourceSets.findMainSourceSet(project).allSource
         }
     }
@@ -174,7 +174,7 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         if (groovydocTask) {
             if( taskContainer.findByName('javadocJar') == null) {
                 taskContainer.create("javadocJar", Jar).configure {
-                    classifier = 'javadoc'
+                    archiveClassifier.set('javadoc')
                     from groovydocTask.outputs
                 }.dependsOn(javadocTask)
             }

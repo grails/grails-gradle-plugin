@@ -150,7 +150,7 @@ class GrailsProfileGradlePlugin implements Plugin<Project> {
             jar.from(skeletonsDir) { CopySpec spec ->
                 spec.into("skeleton")
             }
-            jar.classifier = "sources"
+            jar.archiveClassifier.set("sources")
             jar.destinationDir = new File(project.buildDir, "libs")
             jar.setDescription("Assembles a jar archive containing the profile sources.")
             jar.setGroup(BUILD_GROUP)
