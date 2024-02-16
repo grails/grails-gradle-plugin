@@ -2,7 +2,7 @@ package org.grails.gradle.plugin.util
 
 import groovy.transform.CompileStatic
 import org.gradle.api.Project
-import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 
@@ -35,7 +35,7 @@ class SourceSets {
     }
 
     static SourceSetContainer findSourceSets(Project project) {
-        JavaPluginConvention plugin = project.getConvention().getPlugin(JavaPluginConvention)
+        JavaPluginExtension plugin = project.extensions.getByType(JavaPluginExtension)
         SourceSetContainer sourceSets = plugin?.sourceSets
         return sourceSets
     }
