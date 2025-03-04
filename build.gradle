@@ -105,7 +105,7 @@ dependencies {
     implementation "com.bmuschko:gradle-nexus-plugin:$gradleNexusPluginVersion"
     implementation "org.springframework.boot:spring-boot-gradle-plugin"
     implementation "org.springframework.boot:spring-boot-loader-tools"
-    implementation "io.spring.gradle:dependency-management-plugin:$springGradleDependencyManagementVersion"
+    implementation "io.spring.gradle:dependency-management-plugin"
 }
 
 gradlePlugin {
