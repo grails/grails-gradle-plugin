@@ -78,33 +78,33 @@ dependencies {
     // to ensure build compatibility with Gradle, currently Groovy 3.0.x
     // see: https://docs.gradle.org/current/userguide/compatibility.html#groovy
     compileOnly "org.codehaus.groovy:groovy:$GroovySystem.version"
-    compileOnly "org.grails:grails-bootstrap:$grailsVersion", {
+    compileOnly "org.grails:grails-bootstrap", {
         exclude group: 'org.apache.groovy'
         exclude group: 'org.spockframework'
     }
-    compileOnly "org.grails:grails-shell:$grailsShellVersion", {
-        exclude group: 'org.apache.groovy'
-        exclude group: 'org.spockframework'
-    }
-
-    runtimeOnly "org.grails:grails-bootstrap:$grailsVersion", {
-        exclude group: 'org.apache.groovy'
-        exclude group: 'org.spockframework'
-    }
-    runtimeOnly "org.grails:grails-shell:$grailsShellVersion", {
+    compileOnly "org.grails:grails-shell", {
         exclude group: 'org.apache.groovy'
         exclude group: 'org.spockframework'
     }
 
-    implementation "org.grails:grails-gradle-model:$grailsVersion", {
+    runtimeOnly "org.grails:grails-bootstrap", {
+        exclude group: 'org.apache.groovy'
+        exclude group: 'org.spockframework'
+    }
+    runtimeOnly "org.grails:grails-shell", {
+        exclude group: 'org.apache.groovy'
+        exclude group: 'org.spockframework'
+    }
+
+    implementation "org.grails:grails-gradle-model", {
         exclude group: 'org.apache.groovy'
         exclude group: 'org.spockframework'
     }
 
     implementation "io.github.gradle-nexus:publish-plugin:$gradleNexusPublishPluginVersion"
     implementation "com.bmuschko:gradle-nexus-plugin:$gradleNexusPluginVersion"
-    implementation "org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion"
-    implementation "org.springframework.boot:spring-boot-loader-tools:$springBootVersion"
+    implementation "org.springframework.boot:spring-boot-gradle-plugin"
+    implementation "org.springframework.boot:spring-boot-loader-tools"
     implementation "io.spring.gradle:dependency-management-plugin:$springGradleDependencyManagementVersion"
 }
 

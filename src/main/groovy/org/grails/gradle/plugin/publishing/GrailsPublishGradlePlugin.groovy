@@ -109,13 +109,7 @@ Note: if project properties are used, the properties must be defined prior to ap
         project.rootProject.logger.lifecycle("Applying Grails Publish Gradle Plugin for `${project.name}`...");
 
         final ExtensionContainer extensionContainer = project.extensions
-        final TaskContainer taskContainer = project.tasks
         final GrailsPublishExtension gpe = extensionContainer.create('grailsPublish', GrailsPublishExtension)
-
-        final String mavenPublishUsername = project.findProperty('mavenPublishUsername') ?: System.getenv('MAVEN_PUBLISH_USERNAME') ?: ''
-        final String mavenPublishPassword = project.findProperty('mavenPublishPassword') ?: System.getenv('MAVEN_PUBLISH_PASSWORD') ?: ''
-        // the maven publish url can technically be a directory so do not force to String type
-        final def mavenPublishUrl = project.findProperty('mavenPublishUrl') ?: System.getenv('MAVEN_PUBLISH_URL') ?: ''
 
         final String nexusPublishUrl = project.findProperty('nexusPublishUrl') ?: System.getenv('NEXUS_PUBLISH_URL') ?: ''
         final String nexusPublishSnapshotUrl = project.findProperty('nexusPublishSnapshotUrl') ?: System.getenv('NEXUS_PUBLISH_SNAPSHOT_URL') ?: ''
@@ -222,39 +216,24 @@ Note: if project properties are used, the properties must be defined prior to ap
         }
 
         project.afterEvaluate {
-            if(!project.extensions.findByType(JavaPluginExtension)) {
-                throw new RuntimeException("Grails Publish Plugin requires the Java Plugin to be applied to the project.")
-            }
-            project.extensions.configure(JavaPluginExtension) {
-                it.withJavadocJar()
-                it.withSourcesJar()
-            }
-            //Task groovyDocTask = taskContainer.findByName('groovydoc')
-            taskContainer.named('javadocJar', Jar).configure { Jar task ->
-                project.logger.lifecycle("Configuring javadocJar task for project ${project.name}")
-                Task groovyDocTask = taskContainer.findByName('groovydoc')
-                if(groovyDocTask) {
-                    task.dependsOn groovyDocTask
-
-                    task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
-                    task.from groovyDocTask.outputs
-                }
-            }
-
-            taskContainer.named('sourcesJar', Jar).configure { Jar task ->
-                SourceSetContainer sourceSets = SourceSets.findSourceSets(project)
-                task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
-                // don't only include main, but any source set
-                task.from sourceSets.collect { it.allSource }
-            }
-
             validateProjectPublishable(project as Project)
             project.publishing {
                 if (useMavenPublish) {
-                    addMavenPublishValidations(project as Project, mavenPublishUrl)
+                    final def mavenPublishUrl = project.findProperty('mavenPublishUrl') ?: System.getenv('MAVEN_PUBLISH_URL') ?: ''
+
+                    // Validate as part of the task since we only want to fail the build when the publish actions are in the taskGraph
+                    registerValidationTask(project, "requireMavenPublishUrl") {
+                        // the maven publish url can technically be a directory so do not force to String type
+                        if (!mavenPublishUrl) {
+                            throw new RuntimeException('Could not locate a project property of `mavenPublishUrl` or an environment variable of `MAVEN_PUBLISH_URL`. A URL is required for maven publishing.')
+                        }
+                    }
                     System.setProperty('org.gradle.internal.publish.checksums.insecure', true as String)
+
                     repositories {
                         maven {
+                            final String mavenPublishUsername = project.findProperty('mavenPublishUsername') ?: System.getenv('MAVEN_PUBLISH_USERNAME') ?: ''
+                            final String mavenPublishPassword = project.findProperty('mavenPublishPassword') ?: System.getenv('MAVEN_PUBLISH_PASSWORD') ?: ''
                             if(mavenPublishUsername && mavenPublishPassword) {
                                 credentials {
                                     username = mavenPublishUsername
@@ -417,46 +396,38 @@ Note: if project properties are used, the properties must be defined prior to ap
                 })
             }
 
-            def installTask = taskContainer.findByName('install')
-            def publishToSonatypeTask = taskContainer.findByName('publishToSonatype')
-            def closeAndReleaseSonatypeStagingRepositoryTask = taskContainer.findByName('closeAndReleaseSonatypeStagingRepository')
-            def publishToMavenLocal = taskContainer.findByName('publishToMavenLocal')
-            if (publishToSonatypeTask != null && taskContainer.findByName("publish${GrailsNameUtils.getClassName(defaultClassifier)}") == null) {
-                taskContainer.register("publish${GrailsNameUtils.getClassName(defaultClassifier)}", { Task task ->
-                    task.dependsOn([publishToSonatypeTask, closeAndReleaseSonatypeStagingRepositoryTask])
-                    task.setGroup('publishing')
-                })
-            }
-            if (installTask == null) {
-                taskContainer.register('install', { Task task ->
-                    task.dependsOn(publishToMavenLocal)
-                    task.setGroup('publishing')
-                })
-            }
+            addInstallTaskAliases(project)
         }
     }
 
-    protected void addMavenPublishValidations(Project project, def mavenPublishUrl) {
+    protected void addInstallTaskAliases(Project project) {
+        final TaskContainer taskContainer = project.tasks
+        def installTask = taskContainer.findByName('install')
+        def publishToSonatypeTask = taskContainer.findByName('publishToSonatype')
+        def closeAndReleaseSonatypeStagingRepositoryTask = taskContainer.findByName('closeAndReleaseSonatypeStagingRepository')
+        def publishToMavenLocal = taskContainer.findByName('publishToMavenLocal')
+        if (publishToSonatypeTask != null && taskContainer.findByName("publish${GrailsNameUtils.getClassName(defaultClassifier)}") == null) {
+            taskContainer.register("publish${GrailsNameUtils.getClassName(defaultClassifier)}", { Task task ->
+                task.dependsOn([publishToSonatypeTask, closeAndReleaseSonatypeStagingRepositoryTask])
+                task.setGroup('publishing')
+            })
+        }
+        if (installTask == null) {
+            taskContainer.register('install', { Task task ->
+                task.dependsOn(publishToMavenLocal)
+                task.setGroup('publishing')
+            })
+        }
+    }
+
+    protected void registerValidationTask(Project project, String taskName, Closure c) {
         project.plugins.withId(MAVEN_PUBLISH_PLUGIN_ID) {
             TaskProvider<? extends Task> publishTask = project.tasks.named("publish")
 
-            TaskProvider validateBeforePublish = project.tasks.register("grailsPublishValidation") {
-                doLast {
-                    if (!mavenPublishUrl) {
-                        throw new RuntimeException('Could not locate a project property of `mavenPublishUrl` or an environment variable of `MAVEN_PUBLISH_URL`. A URL is required for maven publishing.')
-                    }
-
-                    Task groovyDocTask = project.tasks.findByName('groovydoc')
-                    if(groovyDocTask) {
-                        if(!groovyDocTask.enabled) {
-                            throw new RuntimeException("Groovydoc task is disabled. Please enable it to ensure javadoc can be published correctly with the Grails Publish Plugin.")
-                        }
-                    }
-                }
-            }
+            TaskProvider validateTask = project.tasks.register(taskName, c)
 
             publishTask.configure {
-                it.dependsOn validateBeforePublish
+                it.dependsOn validateTask
             }
         }
     }
@@ -483,10 +454,46 @@ Note: if project properties are used, the properties must be defined prior to ap
     }
 
     protected validateProjectPublishable(Project project) {
+        if(!project.extensions.findByType(JavaPluginExtension)) {
+            throw new RuntimeException("Grails Publish Plugin requires the Java Plugin to be applied to the project.")
+        }
+        project.extensions.configure(JavaPluginExtension) {
+            it.withJavadocJar()
+            it.withSourcesJar()
+        }
+
+        final TaskContainer taskContainer = project.tasks
+        taskContainer.named('javadocJar', Jar).configure { Jar task ->
+            project.logger.lifecycle("Configuring javadocJar task for project ${project.name}")
+            Task groovyDocTask = taskContainer.findByName('groovydoc')
+            if(groovyDocTask) {
+                task.dependsOn groovyDocTask
+
+                task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
+                task.from groovyDocTask.outputs
+            }
+        }
+
+        taskContainer.named('sourcesJar', Jar).configure { Jar task ->
+            SourceSetContainer sourceSets = SourceSets.findSourceSets(project)
+            task.duplicatesStrategy = DuplicatesStrategy.INCLUDE
+            // don't only include main, but any source set
+            task.from sourceSets.collect { it.allSource }
+        }
+
         SourceSetContainer sourceSets = SourceSets.findSourceSets(project)
         Collection<SourceSet> publishedSources = sourceSets.findAll {it.name != SourceSet.TEST_SOURCE_SET_NAME && !it.allSource.isEmpty() }
         if (!publishedSources) {
             throw new RuntimeException("Cannot apply Grails Publish Plugin. Project ${project.name} does not have anything to publish.")
+        }
+
+        registerValidationTask(project, "grailsPublishValidation") {
+            Task groovyDocTask = project.tasks.findByName('groovydoc')
+            if(groovyDocTask) {
+                if(!groovyDocTask.enabled) {
+                    throw new RuntimeException("Groovydoc task is disabled. Please enable it to ensure javadoc can be published correctly with the Grails Publish Plugin.")
+                }
+            }
         }
     }
 }

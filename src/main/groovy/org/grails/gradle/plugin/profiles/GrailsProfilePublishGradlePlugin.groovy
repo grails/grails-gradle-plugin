@@ -24,6 +24,7 @@ import org.gradle.api.artifacts.DependencySet
 import org.gradle.api.artifacts.SelfResolvingDependency
 import org.gradle.api.publish.maven.MavenPom
 import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.api.publish.maven.tasks.GenerateMavenPom
 import org.gradle.api.tasks.bundling.Jar
 import org.grails.gradle.plugin.publishing.GrailsPublishGradlePlugin
 
@@ -45,13 +46,19 @@ class GrailsProfilePublishGradlePlugin extends GrailsPublishGradlePlugin {
         super.apply(project)
         final File tempReadmeForJavadoc = Files.createTempFile('README', 'txt').toFile()
         tempReadmeForJavadoc << 'https://central.sonatype.org/publish/requirements/#supply-javadoc-and-sources'
-        project.tasks.create('javadocJar', Jar, { Jar jar ->
+        project.tasks.register('javadocProfileJar', Jar, { Jar jar ->
             jar.from(tempReadmeForJavadoc)
             jar.archiveClassifier.set('javadoc')
             jar.destinationDirectory.set(new File(project.layout.buildDirectory.getAsFile().get(), 'libs'))
             jar.setDescription('Assembles a jar archive containing the profile javadoc.')
             jar.setGroup(BUILD_GROUP)
         })
+
+        project.afterEvaluate { evaluated ->
+            evaluated.tasks.withType(GenerateMavenPom).each { generateMavenPomTask ->
+                generateMavenPomTask.dependsOn(project.tasks.withType(Jar))
+            }
+        }
     }
 
     @Override
@@ -68,7 +75,10 @@ class GrailsProfilePublishGradlePlugin extends GrailsPublishGradlePlugin {
 
     @Override
     protected void doAddArtefact(Project project, MavenPublication publication) {
-        publication.artifact(project.tasks.findByName('jar'))
+        publication.artifact(project.tasks.findByName('profileJar'))
+        publication.artifact(project.tasks.findByName('sourcesProfileJar'))
+        publication.artifact(project.tasks.findByName('javadocProfileJar'))
+
         publication.pom(new Action<MavenPom>() {
             @Override
             void execute(MavenPom mavenPom) {
@@ -80,13 +90,11 @@ class GrailsProfilePublishGradlePlugin extends GrailsPublishGradlePlugin {
                         DependencySet dependencySet = project.configurations[GrailsProfileGradlePlugin.RUNTIME_CONFIGURATION].allDependencies
 
                         for (Dependency dependency : dependencySet) {
-                            if (! (dependency instanceof SelfResolvingDependency)) {
-                                Node dependencyNode = dependenciesNode.appendNode('dependency')
-                                dependencyNode.appendNode('groupId', dependency.group)
-                                dependencyNode.appendNode('artifactId', dependency.name)
-                                dependencyNode.appendNode('version', dependency.version)
-                                dependencyNode.appendNode('scope', GrailsProfileGradlePlugin.RUNTIME_CONFIGURATION)
-                            }
+                            Node dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', dependency.group)
+                            dependencyNode.appendNode('artifactId', dependency.name)
+                            dependencyNode.appendNode('version', dependency.version)
+                            dependencyNode.appendNode('scope', GrailsProfileGradlePlugin.RUNTIME_CONFIGURATION)
                         }
                     }
                 })

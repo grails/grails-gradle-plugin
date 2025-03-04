@@ -23,7 +23,8 @@ subprojects { project ->
     }
 
     dependencies {
-        implementation "org.apache.groovy:groovy-all:$groovyVersion"
+        implementation platform("org.grails:grails-bom:$grailsVersion")
+        implementation "org.apache.groovy:groovy"
     }
 
     if(project.name == "subproject1") {

@@ -89,13 +89,15 @@ class GrailsProfileGradlePlugin implements Plugin<Project> {
             spec.into("skeleton")
         }
 
-        def processResources = project.tasks.create("processResources", Copy, { Copy c ->
+        def processProfileResourcesTask = project.tasks.register("processProfileResources", Copy, { Copy c ->
+            c.group = "build"
             c.with(spec1, spec2, spec3, spec4)
             c.into(new File(resourcesDir, "/META-INF/grails-profile"))
         })
 
         def classsesDir = new File(project.layout.buildDirectory.getAsFile().get(), "classes/profile")
-        def compileTask = project.tasks.create("compileProfile", ProfileCompilerTask, { ProfileCompilerTask task ->
+        def compileProfileTask = project.tasks.register("compileProfile", ProfileCompilerTask, { ProfileCompilerTask task ->
+            task.group = "build"
             task.profileDestinationDir = classsesDir
             task.source = commandsDir
             task.config = profileYml
@@ -105,8 +107,14 @@ class GrailsProfileGradlePlugin implements Plugin<Project> {
             task.classpath = project.configurations.getByName(RUNTIME_CONFIGURATION) + project.files(IOUtils.findJarFile(GroovyScriptCommand))
         })
 
-        def jarTask = project.tasks.create("jar", Jar, { Jar jar ->
-            jar.dependsOn(processResources, compileTask)
+        def profileJarTask = project.tasks.register("profileJar", Jar, { Jar jar ->
+            jar.dependsOn(processProfileResourcesTask, compileProfileTask)
+
+            def jarTask = project.tasks.findByName("jar")
+            if(jarTask){
+                jar.dependsOn(jarTask)
+            }
+
             jar.from(resourcesDir)
             jar.from(classsesDir)
             jar.destinationDirectory.set(new File(project.layout.buildDirectory.getAsFile().get(), "libs"))
@@ -117,7 +125,7 @@ class GrailsProfileGradlePlugin implements Plugin<Project> {
 //            project.artifacts.add(CONFIGURATION_NAME, jarArtifact)
         })
 
-        project.tasks.create("sourcesJar", Jar, { Jar jar ->
+        project.tasks.register("sourcesProfileJar", Jar, { Jar jar ->
             jar.from(commandsDir)
             if(profileYml.exists()) {
                 jar.from(profileYml)
@@ -134,7 +142,6 @@ class GrailsProfileGradlePlugin implements Plugin<Project> {
             jar.setGroup(BUILD_GROUP)
 
         })
-        project.tasks.findByName("assemble").dependsOn jarTask
-
+        project.tasks.findByName("assemble").dependsOn profileJarTask
     }
 }

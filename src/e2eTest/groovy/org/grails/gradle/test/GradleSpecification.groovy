@@ -38,8 +38,8 @@ abstract class GradleSpecification extends Specification {
         )
 
         gradleRunner = setGradleProperty(
-                "groovyVersion",
-                System.getProperty("groovyVersion"),
+                "grailsVersion",
+                System.getProperty("grailsVersion"),
                 gradleRunner
         )
     }

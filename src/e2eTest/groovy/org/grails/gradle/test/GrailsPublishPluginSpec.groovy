@@ -483,7 +483,8 @@ class GrailsPublishPluginSpec extends GradleSpecification {
             }
 
             dependencies {
-                implementation "org.apache.groovy:groovy-all:\$groovyVersion"
+                implementation platform("org.grails:grails-bom:\$grailsVersion")
+                implementation "org.apache.groovy:groovy"
             }
         
             apply plugin: 'org.grails.grails-publish'
@@ -646,7 +647,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
         assertTaskSuccess("groovydoc", result)
-        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -718,7 +719,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
         assertTaskSuccess("groovydoc", result)
-        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -782,7 +783,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         then:
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
-        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -823,7 +824,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         then:
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
-        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -866,7 +867,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         then:
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
-        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -917,7 +918,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         then:
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
-        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "processResources", "classes", "jar", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -969,7 +970,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
         assertTaskSuccess("groovydoc", result)
-        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
@@ -1014,7 +1015,7 @@ class GrailsPublishPluginSpec extends GradleSpecification {
         assertTaskSuccess("sourcesJar", result)
         assertTaskSuccess("javadocJar", result)
         assertTaskSuccess("groovydoc", result)
-        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
+        assertBuildSuccess(result, ["compileJava", "compileGroovy", "processResources", "classes", "jar", "groovydoc", "javadoc", "javadocJar", "sourcesJar", "grailsPublishValidation", "requireMavenPublishUrl", "generateMetadataFileForMavenPublication", "generatePomFileForMavenPublication", "publishMavenPublicationToMavenLocal", "publishToMavenLocal"])
 
         !result.output.contains("does not have a version defined. Using the gradle property `projectVersion` to assume version is ")
         result.output.contains("Environment Variable `GRAILS_PUBLISH_RELEASE` detected - using variable instead of project version.")
