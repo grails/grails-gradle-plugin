@@ -24,10 +24,8 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.PublishArtifact
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.internal.tasks.DefaultTaskDependency
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.JavaExec
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.TaskContainer
 import org.gradle.api.tasks.TaskDependency
@@ -36,7 +34,6 @@ import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.language.jvm.tasks.ProcessResources
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 import org.grails.gradle.plugin.util.SourceSets
-import org.springframework.boot.gradle.plugin.SpringBootPlugin
 import org.springframework.boot.gradle.tasks.bundling.BootJar
 
 import javax.inject.Inject
@@ -63,10 +60,6 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         checkForConfigurationClash(project)
 
         configureAstSources(project)
-
-        project.gradle.projectsEvaluated {
-            configureProjectNameAndVersionASTMetadata(project)
-        }
 
         configureAssembleTask(project)
 
@@ -275,23 +268,17 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         }
     }
 
-    protected void configureProjectNameAndVersionASTMetadata(Project project) {
-        def projectName = project.name
-        def projectVersion = project.version
-        def configScriptTask = project.tasks.named('configScript').get()
-        configScriptTask.inputs.property('name', projectName)
-        configScriptTask.inputs.property('version', projectVersion)
-        configScriptTask.doLast {
-            outputs.files.singleFile << """
-            withConfig(configuration) {
-                inline(phase: 'CONVERSION') { source, context, classNode ->
-                    classNode.putNodeMetaData('projectVersion', '$projectVersion')
-                    classNode.putNodeMetaData('projectName', '$projectName')
-                    classNode.putNodeMetaData('isPlugin', 'true')
-                }
+    @Override
+    String generateGroovyCompileScript(Project project) {
+        String otherScript = super.generateGroovyCompileScript(project)
+        String astProjectNameAndMetadata = """
+            inline(phase: 'CONVERSION') { source, context, classNode ->
+                classNode.putNodeMetaData('projectVersion', '${project.version}')
+                classNode.putNodeMetaData('projectName', '${project.name}')
+                classNode.putNodeMetaData('isPlugin', 'true')
             }
-            """.stripIndent(12)
-        }
+        """
+        [otherScript, astProjectNameAndMetadata].join("\n\n")
     }
 
     protected void checkForConfigurationClash(Project project) {

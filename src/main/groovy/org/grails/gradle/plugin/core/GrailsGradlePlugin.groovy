@@ -36,9 +36,11 @@ import org.gradle.api.artifacts.Dependency
 import org.gradle.api.artifacts.DependencyResolveDetails
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.file.FileCollection
+import org.gradle.api.file.RegularFile
 import org.gradle.api.java.archives.Manifest
 import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.plugins.GroovyPlugin
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSet
@@ -144,20 +146,58 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
         configurePathingJar(project)
 
-        if (project.tasks.findByName('configScript') == null) {
-            def configScriptTask = project.tasks.create('configScript')
-            def configFile = project.layout.buildDirectory.file('config.groovy')
-            configFile.get().asFile.delete()
-            configScriptTask.outputs.file(configFile)
-            addJavaTimeImport(project, configScriptTask)
-            project.tasks.withType(GroovyCompile).configureEach { GroovyCompile task ->
-                task.dependsOn('configScript')
-                def mergedConfigFile = project.tasks.named('configScript').get().outputs.files.singleFile
-                if (mergedConfigFile.exists()) {
-                    task.groovyOptions.configurationScript = mergedConfigFile
+        configureGroovyCompiler(project)
+    }
+
+    void configureGroovyCompiler(Project project) {
+        Provider<RegularFile> configFile = project.layout.buildDirectory.file("grailsGroovyCompilerConfig.groovy")
+
+        Task configScriptTask = project.tasks.create('configureGroovyCompiler').configure { Task it ->
+            it.inputs.property("version", project.provider { project.version.toString() })
+            it.inputs.property("name", project.provider { project.name.toString() })
+            it.outputs.file(configFile)
+
+            it.doLast {
+                String script = generateGroovyCompileScript(it.project)
+
+                String scriptToConfigure = script ?
+                """
+                withConfig(configuration) {
+                    ${script}
+                }
+                """ : null
+
+                if(scriptToConfigure) {
+                    // Merge the script at runtime so we don't suffer a performance penalty as part of every gradle task run
+                    GroovyCompile compileTask = project.tasks.named('compileGroovy').get() as GroovyCompile
+                    if(compileTask.groovyOptions.configurationScript) {
+                        scriptToConfigure = [scriptToConfigure, compileTask.groovyOptions.configurationScript.text].findAll { it }.join('\n')
+                    }
+
+                    compileTask.groovyOptions.configurationScript = configFile.get().asFile
+
+                    File toCreate = configFile.get().asFile
+                    toCreate.text = scriptToConfigure
                 }
             }
         }
+
+        // Because the gradle plugin extends the groovy plugin, this will always exist at this point
+        project.tasks.withType(GroovyCompile).configureEach {
+            it.dependsOn(configScriptTask)
+        }
+    }
+
+    protected String generateGroovyCompileScript(Project project) {
+        if(project.extensions.getByType(GrailsExtension).importJavaTime) {
+            return """
+            imports {
+                star 'java.time'
+            }
+            """
+        }
+
+        return null
     }
 
     protected void excludeDependencies(Project project) {
@@ -302,21 +342,6 @@ class GrailsGradlePlugin extends GroovyPlugin {
                         }
                     }
                 }
-            }
-        }
-    }
-
-    protected void addJavaTimeImport(Project project, Task configScriptTask) {
-        configScriptTask.doLast {
-            GrailsExtension grailsExt = project.extensions.getByType(GrailsExtension)
-            if (grailsExt.importJavaTime) {
-                outputs.files.singleFile << '''
-                configuration.with {
-                    def importCustomizer = new org.codehaus.groovy.control.customizers.ImportCustomizer()
-                    importCustomizer.addStarImports('java.time')
-                    addCompilationCustomizers(importCustomizer)
-                }
-                '''.stripIndent(16)
             }
         }
     }
