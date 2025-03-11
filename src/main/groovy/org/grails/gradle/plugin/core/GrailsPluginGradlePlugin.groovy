@@ -64,7 +64,7 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
 
         configureAstSources(project)
 
-        configureProjectNameAndVersionASTMetadata(project)
+        configurePluginNameAndVersionASTMetadata(project)
 
         configureAssembleTask(project)
 
@@ -273,24 +273,23 @@ class GrailsPluginGradlePlugin extends GrailsGradlePlugin {
         }
     }
 
-    protected void configureProjectNameAndVersionASTMetadata(Project project) {
-        def projectNameProvider = project.provider { project.name }
-        def projectVersionProvider = project.provider { project.version }
-        def configScriptTask = project.tasks.named('configScript').get()
-        configScriptTask.inputs.property('name', projectNameProvider)
-        configScriptTask.inputs.property('version', projectVersionProvider)
-        configScriptTask.doLast {
-            def resolvedProjectName = projectNameProvider.get()
-            def resolvedProjectVersion = projectVersionProvider.get()
-            outputs.files.singleFile << """
-            withConfig(configuration) {
-                inline(phase: 'CONVERSION') { source, context, classNode ->
-                    classNode.putNodeMetaData('projectVersion', '$resolvedProjectVersion')
-                    classNode.putNodeMetaData('projectName', '$resolvedProjectName')
-                    classNode.putNodeMetaData('isPlugin', 'true')
+    protected void configurePluginNameAndVersionASTMetadata(Project project) {
+        project.tasks.named('configScript').configure { Task task ->
+            def projectNameProvider = project.provider { project.name }
+            def projectVersionProvider = project.provider { project.version }
+            task.inputs.property('name', projectNameProvider)
+            task.inputs.property('version', projectVersionProvider)
+            task.doLast {
+                it.outputs.files.singleFile << """
+                withConfig(configuration) {
+                    inline(phase: 'CONVERSION') { source, context, classNode ->
+                        classNode.putNodeMetaData('projectVersion', '${projectVersionProvider.get()}')
+                        classNode.putNodeMetaData('projectName', '${projectNameProvider.get()}')
+                        classNode.putNodeMetaData('isPlugin', 'true')
+                    }
                 }
+                """.stripIndent(16)
             }
-            """.stripIndent(12)
         }
     }
 

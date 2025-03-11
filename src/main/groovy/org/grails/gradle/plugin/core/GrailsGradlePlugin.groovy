@@ -44,6 +44,7 @@ import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.SourceSetOutput
 import org.gradle.api.tasks.TaskContainer
+import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.compile.GroovyCompile
 import org.gradle.api.tasks.testing.Test
@@ -144,18 +145,26 @@ class GrailsGradlePlugin extends GroovyPlugin {
 
         configurePathingJar(project)
 
-        if (project.tasks.findByName('configScript') == null) {
-            def configScriptTask = project.tasks.create('configScript')
-            def configFile = project.layout.buildDirectory.file('config.groovy')
-            configFile.get().asFile.delete()
-            configScriptTask.outputs.file(configFile)
-            addJavaTimeImport(project, configScriptTask)
-            project.tasks.withType(GroovyCompile).configureEach { GroovyCompile task ->
-                task.dependsOn('configScript')
-                def mergedConfigFile = project.tasks.named('configScript').get().outputs.files.singleFile
-                if (mergedConfigFile.exists()) {
-                    task.groovyOptions.configurationScript = mergedConfigFile
-                }
+        configureGroovyCompiler(project)
+    }
+
+    protected void configureGroovyCompiler(Project project) {
+        def configScriptTask = project.tasks.register('configScript')
+        configScriptTask.configure { Task task ->
+            def outputFile = project.layout.buildDirectory.file('config.groovy')
+            task.outputs.file(outputFile)
+            task.doFirst {
+                // As we are appending we need to delete the file first to get a blank canvas
+                outputFile.get().asFile.delete()
+            }
+        }
+        addJavaTimeImport(project, configScriptTask)
+        project.tasks.withType(GroovyCompile).configureEach { GroovyCompile task ->
+            task.dependsOn('configScript')
+            def mergedConfigFile = project.tasks.named('configScript').get().outputs.files.singleFile
+            if (mergedConfigFile.exists()) {
+                project.logger.lifecycle('Adding groovy compiler configuration script: {}', mergedConfigFile)
+                task.groovyOptions.configurationScript = mergedConfigFile
             }
         }
     }
@@ -306,17 +315,20 @@ class GrailsGradlePlugin extends GroovyPlugin {
         }
     }
 
-    protected void addJavaTimeImport(Project project, Task configScriptTask) {
-        configScriptTask.doLast {
+    protected void addJavaTimeImport(Project project, TaskProvider<Task> configScriptTask) {
+        configScriptTask.configure { Task task ->
             GrailsExtension grailsExt = project.extensions.getByType(GrailsExtension)
             if (grailsExt.importJavaTime) {
-                outputs.files.singleFile << '''
-                withConfig(configuration) { 
-                    def importCustomizer = new org.codehaus.groovy.control.customizers.ImportCustomizer()
-                    importCustomizer.addStarImports('java.time')
-                    configuration.addCompilationCustomizers(importCustomizer)
+                project.logger.lifecycle('Adding auto import of java.time.* to Groovy compiler configuration')
+                task.doLast {
+                    it.outputs.files.singleFile << '''
+                    withConfig(configuration) { 
+                        imports {
+                            star('java.time')
+                        }
+                    }
+                    '''.stripIndent(20)
                 }
-                '''.stripIndent(16)
             }
         }
     }
