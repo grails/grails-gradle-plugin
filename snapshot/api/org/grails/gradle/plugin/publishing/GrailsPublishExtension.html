@@ -103,6 +103,7 @@ if (location.href.indexOf('is-external=true') == -1) {
             <br>
 
 <pre>@groovy.transform.CompileStatic
+@groovy.transform.ToString(includeNames: true)
 class GrailsPublishExtension
 extends java.lang.Object</pre>
 
@@ -205,26 +206,21 @@ extends java.lang.Object</pre>
                         </tr>
                         
                         <tr class="rowColor">
-                            <td class="colFirst"><code><strong><a href='../../../../../org/grails/gradle/plugin/publishing/PublishType.html'>PublishType</a></strong></code>&nbsp;</td>
-                            <td class="colLast"><code><a href="#releasePublishType">releasePublishType</a></code><br>Determines which plugin is used to publish releases</td>
+                            <td class="colFirst"><code><strong>java.lang.Boolean</strong></code>&nbsp;</td>
+                            <td class="colLast"><code><a href="#publishTestSources">publishTestSources</a></code><br>Whether to publish test sources with a "tests" classifier</td>
                         </tr>
                         
                         <tr class="altColor">
-                            <td class="colFirst"><code><strong><a href='../../../../../org/grails/gradle/plugin/publishing/PublishType.html'>PublishType</a></strong></code>&nbsp;</td>
-                            <td class="colLast"><code><a href="#snapshotPublishType">snapshotPublishType</a></code><br>Determines which plugin is used to publish snapshots</td>
-                        </tr>
-                        
-                        <tr class="rowColor">
                             <td class="colFirst"><code><strong>java.lang.String</strong></code>&nbsp;</td>
                             <td class="colLast"><code><a href="#title">title</a></code><br>Title of the project, defaults to the project name</td>
                         </tr>
                         
-                        <tr class="altColor">
+                        <tr class="rowColor">
                             <td class="colFirst"><code><strong>java.lang.String</strong></code>&nbsp;</td>
                             <td class="colLast"><code><a href="#vcsUrl">vcsUrl</a></code><br>The source control URL of the project</td>
                         </tr>
                         
-                        <tr class="rowColor">
+                        <tr class="altColor">
                             <td class="colFirst"><code><strong>java.lang.String</strong></code>&nbsp;</td>
                             <td class="colLast"><code><a href="#websiteUrl">websiteUrl</a></code><br>The website URL of the published project</td>
                         </tr>
@@ -416,19 +412,11 @@ extends java.lang.Object</pre>
                             </li>
                         </ul>
                     
-                        <a name="releasePublishType"><!-- --></a>
+                        <a name="publishTestSources"><!-- --></a>
                         <ul class="blockListLast">
                             <li class="blockList">
-                                <h4><a href='../../../../../org/grails/gradle/plugin/publishing/PublishType.html'>PublishType</a> <strong>releasePublishType</strong></h4>
-                                <p> Determines which plugin is used to publish releases</p>
-                            </li>
-                        </ul>
-                    
-                        <a name="snapshotPublishType"><!-- --></a>
-                        <ul class="blockListLast">
-                            <li class="blockList">
-                                <h4><a href='../../../../../org/grails/gradle/plugin/publishing/PublishType.html'>PublishType</a> <strong>snapshotPublishType</strong></h4>
-                                <p> Determines which plugin is used to publish snapshots</p>
+                                <h4>java.lang.Boolean <strong>publishTestSources</strong></h4>
+                                <p> Whether to publish test sources with a "tests" classifier</p>
                             </li>
                         </ul>
                     
