@@ -8,5 +8,8 @@ org.grails.gradle.plugin.profiles.tasks
 org.grails.gradle.plugin.publishing
 org.grails.gradle.plugin.run
 org.grails.gradle.plugin.util
+org.grails.gradle.plugin.views
+org.grails.gradle.plugin.views.gsp
+org.grails.gradle.plugin.views.json
+org.grails.gradle.plugin.views.markup
 org.grails.gradle.plugin.web
-org.grails.gradle.plugin.web.gsp
