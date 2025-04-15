@@ -1,4 +1,0 @@
-rootProject.name = 'multi-project-plugins-applied-parent'
-
-include 'subproject1'
-include 'subproject2'
